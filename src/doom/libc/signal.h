@@ -1,0 +1,4 @@
+#ifndef SYCL_DOOM_LIBC_SIGNAL_H
+#define SYCL_DOOM_LIBC_SIGNAL_H
+
+#endif

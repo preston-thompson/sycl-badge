@@ -1,0 +1,4 @@
+#ifndef SYCL_DOOM_LIBC_SYS_WAIT_H
+#define SYCL_DOOM_LIBC_SYS_WAIT_H
+
+#endif
