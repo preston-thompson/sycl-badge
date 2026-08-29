@@ -710,7 +710,7 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
             yl = cclip_x + 1;
 
         // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-        if (yh < viewheight && yl <= yh)
+        if (yh < SCREENHEIGHT && yl <= yh)
         {
             dcvars->source =  (const byte*)column + 3;
 
