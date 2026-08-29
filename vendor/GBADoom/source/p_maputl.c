@@ -352,8 +352,6 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(const line_t*))
     // Most demos go out of sync, and maybe other problems happen, if we
     // don't consider linedef 0. For safety this should be qualified.
 
-    list++;     // skip 0 starting delimiter                      // phares
-
     const int vcount = _g->validcount;
 
     for ( ; SHORT(*list) != -1 ; list++)                                   // phares
