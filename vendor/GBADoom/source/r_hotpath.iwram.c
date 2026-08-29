@@ -235,8 +235,8 @@ static const fixed_t projectiony = ((SCREENHEIGHT * (SCREENWIDTH/2) * 320) / 200
 static const fixed_t pspritescale = FRACUNIT*SCREENWIDTH/320;
 static const fixed_t pspriteiscale = FRACUNIT*320/SCREENWIDTH;
 
-static const fixed_t pspriteyscale = (SCREENHEIGHT << FRACBITS) / 200;
-static const fixed_t pspriteyiscale = ((UINT_MAX) / ((SCREENHEIGHT << FRACBITS) / 200));
+static const fixed_t pspriteyscale = ((SCREENHEIGHT-ST_SCALED_HEIGHT) << FRACBITS) / 200;
+static const fixed_t pspriteyiscale = ((UINT_MAX) / (((SCREENHEIGHT-ST_SCALED_HEIGHT) << FRACBITS) / 200));
 
 
 static const angle_t clipangle = 537395200; //xtoviewangle[0];

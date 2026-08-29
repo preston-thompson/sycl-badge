@@ -48,7 +48,7 @@
 #include "global_data.h"
 #include "i_system_e32.h"
 
-extern short* wipe_y_lookup;
+extern short wipe_y_lookup[];
 
 
 #ifdef GBA
