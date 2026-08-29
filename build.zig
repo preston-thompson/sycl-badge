@@ -101,6 +101,7 @@ pub fn build(b: *Build) void {
         .files = &doom_c_sources,
         .flags = &doom_c_flags,
     });
+    doom.artifact.addAssemblyFile(b.path("src/doom/doom_iwad.S"));
     mb.install_firmware(doom, .{ .format = .elf });
     mb.install_firmware(doom, .{ .format = .{ .uf2 = .{ .family_id = .RP2350_ARM_S } } });
 

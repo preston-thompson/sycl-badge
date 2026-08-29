@@ -34,6 +34,8 @@ SECTIONS
     . = ALIGN(4);
     *(.text*)
     *(.rodata*)
+    . = ALIGN(4);
+    KEEP(*(.doom_iwad))
   } > flash
 
   __ram_text_load__ = LOADADDR(.ram_text);
