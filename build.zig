@@ -86,11 +86,13 @@ pub fn build(b: *Build) void {
         .optimize = .ReleaseSmall,
         .root_source_file = b.path("src/root.zig"),
         .linker_script = .{
-            .file = b.path("src/os/linker.ld"),
+            .file = b.path("src/doom/linker.ld"),
             .generate = .none,
         },
         .stack = .{ .symbol_name = "__stack" },
     });
+    doom.artifact.linker_allow_shlib_undefined = true;
+    doom.artifact.setLinkerScript(b.path("src/doom/linker.ld"));
     doom.artifact.addIncludePath(b.path("vendor/GBADoom/include"));
     doom.artifact.addIncludePath(b.path("src/doom"));
     doom.artifact.addIncludePath(b.path("src/doom/libc"));
@@ -238,6 +240,7 @@ const doom_c_sources = [_][]const u8{
     "src/doom/libc.c",
     "src/doom/i_system_badge.c",
     "src/doom/i_video_badge.c",
+    "src/doom/sycl_doom_main.c",
     "vendor/GBADoom/source/am_map.c",
     "vendor/GBADoom/source/d_client.c",
     "vendor/GBADoom/source/d_items.c",

@@ -9,6 +9,8 @@ const interrupts = @import("../os/interrupts.zig");
 const lcd = @import("../os/drivers/lcd.zig");
 const timer = @import("../os/drivers/timer.zig");
 
+extern fn sycl_doom_main() c_int;
+
 pub const panic = @import("../os/system/panic.zig").panic;
 
 pub const microzig_options: microzig.Options = .{
@@ -28,6 +30,9 @@ pub fn main() !void {
     lcd.drawString(20, 28, "SYCL DOOM", lcd.RED, lcd.BLACK, 2);
     lcd.drawString(16, 54, "firmware scaffold", lcd.WHITE, lcd.BLACK, 1);
     lcd.drawString(20, 74, "GBADoom next", lcd.CYAN, lcd.BLACK, 1);
+    while (lcd.isBusy()) {}
+
+    _ = sycl_doom_main();
 
     var led_deadline = timer.micros() + 250_000;
     while (true) {
