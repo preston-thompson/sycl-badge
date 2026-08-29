@@ -179,7 +179,7 @@ static void P_MovePlayer (player_t* player)
   ticcmd_t *cmd = &player->cmd;
   mobj_t *mo = player->mo;
 
-  mo->angle += cmd->angleturn << 16;
+  mo->angle += ((unsigned int)cmd->angleturn << 16);
   _g->onground = mo->z <= mo->floorz;
 
   // killough 10/98:

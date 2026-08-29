@@ -6,7 +6,7 @@
 #include "i_system_e32.h"
 #include "badge_platform.h"
 
-static byte indexed_buffer[SCREENWIDTH * SCREENHEIGHT];
+static byte indexed_buffer[SCREENPITCH * 2 * SCREENHEIGHT];
 static uint16_t rgb565_buffer[SCREENWIDTH * SCREENHEIGHT];
 
 unsigned short *I_GetBackBuffer(void)
@@ -37,9 +37,12 @@ void I_FinishUpdate_e32(const byte *srcBuffer, const byte *pallete, const unsign
         if (pixels > SCREENWIDTH * SCREENHEIGHT) {
             pixels = SCREENWIDTH * SCREENHEIGHT;
         }
-        for (unsigned int i = 0; i < pixels; i++) {
-            const byte *rgb = &pallete[srcBuffer[i] * 3];
-            rgb565_buffer[i] = (uint16_t)(((rgb[0] & 0xf8) << 8) | ((rgb[1] & 0xfc) << 3) | (rgb[2] >> 3));
+        for (unsigned int y = 0; y < height; y++) {
+            for (unsigned int x = 0; x < width; x++) {
+                const byte color = srcBuffer[y * SCREENPITCH * 2 + x];
+                const byte *rgb = &pallete[color * 3];
+                rgb565_buffer[y * width + x] = (uint16_t)(((rgb[2] & 0xf8) << 8) | ((rgb[1] & 0xfc) << 3) | (rgb[0] >> 3));
+            }
         }
     }
     sycl_doom_present_rgb565(rgb565_buffer, width, height);

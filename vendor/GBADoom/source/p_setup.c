@@ -69,8 +69,8 @@ static void P_LoadVertexes (int lump)
   vertex_t *vertexes = Z_Calloc(_g->numvertexes, sizeof(vertex_t), PU_LEVEL, 0);
 
   for (int i = 0; i < _g->numvertexes; i++) {
-    vertexes[i].x = SHORT(data[i].x) << FRACBITS;
-    vertexes[i].y = SHORT(data[i].y) << FRACBITS;
+    vertexes[i].x = (fixed_t)((unsigned int)SHORT(data[i].x) << FRACBITS);
+    vertexes[i].y = (fixed_t)((unsigned int)SHORT(data[i].y) << FRACBITS);
   }
 
   _g->vertexes = vertexes;
@@ -113,8 +113,8 @@ static void P_LoadSegs (int lump)
 
         segs[i].v1 = _g->vertexes[v1];
         segs[i].v2 = _g->vertexes[v2];
-        segs[i].angle = SHORT(data[i].angle) << FRACBITS;
-        segs[i].offset = SHORT(data[i].offset) << FRACBITS;
+        segs[i].angle = (angle_t)((unsigned int)(unsigned short)SHORT(data[i].angle) << 16);
+        segs[i].offset = (fixed_t)((unsigned int)SHORT(data[i].offset) << FRACBITS);
         segs[i].linenum = linenum;
         segs[i].sidenum = line->sidenum[sidenum];
         segs[i].frontsectornum = NO_INDEX;
@@ -123,7 +123,7 @@ static void P_LoadSegs (int lump)
         if (segs[i].sidenum != NO_INDEX) {
             segs[i].frontsectornum = (unsigned short)(_g->sides[segs[i].sidenum].sector - _g->sectors);
         }
-        if (line->sidenum[sidenum ^ 1] != NO_INDEX) {
+        if ((line->flags & ML_TWOSIDED) && line->sidenum[sidenum ^ 1] != NO_INDEX) {
             segs[i].backsectornum = (unsigned short)(_g->sides[line->sidenum[sidenum ^ 1]].sector - _g->sectors);
         }
     }
@@ -175,8 +175,8 @@ static void P_LoadSectors (int lump)
       sector_t *ss = _g->sectors + i;
       const mapsector_t *ms = (const mapsector_t *) data + i;
 
-      ss->floorheight = SHORT(ms->floorheight)<<FRACBITS;
-      ss->ceilingheight = SHORT(ms->ceilingheight)<<FRACBITS;
+      ss->floorheight = (fixed_t)((unsigned int)SHORT(ms->floorheight)<<FRACBITS);
+      ss->ceilingheight = (fixed_t)((unsigned int)SHORT(ms->ceilingheight)<<FRACBITS);
       ss->floorpic = R_FlatNumForName(ms->floorpic);
       ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
 
@@ -331,7 +331,7 @@ static void P_LoadLineDefs2(int lump)
 
 static void P_LoadSideDefs (int lump)
 {
-  _g->numsides = W_LumpLength(lump) / sizeof(mapsidedef_t);
+  _g->numsides = W_LumpLength(lump) / 30;
   _g->sides = Z_Calloc(_g->numsides,sizeof(side_t),PU_LEVEL,0);
 }
 
@@ -341,20 +341,20 @@ static void P_LoadSideDefs (int lump)
 
 static void P_LoadSideDefs2(int lump)
 {
-    const byte *data = W_CacheLumpNum(lump); // cph - const*, wad lump handling updated
-    int  i;
+    int                 i;
+    const byte *data = W_CacheLumpNum(lump);
 
     for (i=0; i<_g->numsides; i++)
     {
-        register const mapsidedef_t *msd = (const mapsidedef_t *) data + i;
+        const byte *msd = data + i * 30;
         register side_t *sd = _g->sides + i;
         register sector_t *sec;
 
-        sd->textureoffset = msd->textureoffset;
-        sd->rowoffset = msd->rowoffset;
+        sd->textureoffset = SHORT(*(const short *)(msd + 0));
+        sd->rowoffset = SHORT(*(const short *)(msd + 2));
 
         { /* cph 2006/09/30 - catch out-of-range sector numbers; use sector 0 instead */
-            unsigned short sector_num = SHORT(msd->sector);
+            unsigned short sector_num = SHORT(*(const short *)(msd + 28));
             if (sector_num >= _g->numsectors)
             {
                 lprintf(LO_WARN,"P_LoadSideDefs2: sidedef %i has out-of-range sector num %u\n", i, sector_num);
@@ -363,9 +363,9 @@ static void P_LoadSideDefs2(int lump)
             sd->sector = sec = &_g->sectors[sector_num];
         }
 
-        sd->midtexture = msd->midtexture;
-        sd->toptexture = msd->toptexture;
-        sd->bottomtexture = msd->bottomtexture;
+        sd->toptexture = R_LoadTextureByName((const char *)(msd + 4));
+        sd->bottomtexture = R_LoadTextureByName((const char *)(msd + 12));
+        sd->midtexture = R_LoadTextureByName((const char *)(msd + 20));
 
         R_GetTexture(sd->midtexture);
         R_GetTexture(sd->toptexture);
@@ -405,10 +405,10 @@ static void P_LoadBlockMap (int lump)
 {
     _g->blockmaplump = W_CacheLumpNum(lump);
 
-    _g->bmaporgx = _g->blockmaplump[0]<<FRACBITS;
-    _g->bmaporgy = _g->blockmaplump[1]<<FRACBITS;
-    _g->bmapwidth = _g->blockmaplump[2];
-    _g->bmapheight = _g->blockmaplump[3];
+    _g->bmaporgx = (fixed_t)((unsigned int)SHORT(_g->blockmaplump[0])<<FRACBITS);
+    _g->bmaporgy = (fixed_t)((unsigned int)SHORT(_g->blockmaplump[1])<<FRACBITS);
+    _g->bmapwidth = SHORT(_g->blockmaplump[2]);
+    _g->bmapheight = SHORT(_g->blockmaplump[3]);
 
 
     // clear out mobj chains - CPhipps - use calloc

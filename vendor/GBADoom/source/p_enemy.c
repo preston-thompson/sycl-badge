@@ -933,7 +933,7 @@ void A_FaceTarget(mobj_t *actor)
   if (actor->target->flags & MF_SHADOW)
     { // killough 5/5/98: remove dependence on order of evaluation:
       int t = P_Random();
-      actor->angle += (t-P_Random())<<21;
+      actor->angle += ((fixed_t)((unsigned int)(t - P_Random())<<21));
     }
 }
 
@@ -954,7 +954,7 @@ void A_PosAttack(mobj_t *actor)
 
   // killough 5/5/98: remove dependence on order of evaluation:
   t = P_Random();
-  angle += (t - P_Random())<<20;
+  angle += ((fixed_t)((unsigned int)(t - P_Random())<<20));
   damage = (P_Random()%5 + 1)*3;
   P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
@@ -972,7 +972,7 @@ void A_SPosAttack(mobj_t* actor)
   for (i=0; i<3; i++)
     {  // killough 5/5/98: remove dependence on order of evaluation:
       int t = P_Random();
-      int angle = bangle + ((t - P_Random())<<20);
+      int angle = bangle + (((fixed_t)((unsigned int)(t - P_Random())<<20)));
       int damage = ((P_Random()%5)+1)*3;
       P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
     }
@@ -991,7 +991,7 @@ void A_CPosAttack(mobj_t *actor)
 
   // killough 5/5/98: remove dependence on order of evaluation:
   t = P_Random();
-  angle = bangle + ((t - P_Random())<<20);
+  angle = bangle + (((fixed_t)((unsigned int)(t - P_Random())<<20)));
   damage = ((P_Random()%5)+1)*3;
   P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
@@ -2124,8 +2124,8 @@ void A_Mushroom(mobj_t *actor)
     for (j = -n; j <= n; j += 8)
       {
   mobj_t target = *actor, *mo;
-  target.x += i << FRACBITS;    // Aim in many directions from source
-  target.y += j << FRACBITS;
+  target.x += (fixed_t)((unsigned int)i << FRACBITS);    // Aim in many directions from source
+  target.y += (fixed_t)((unsigned int)j << FRACBITS);
   target.z += P_AproxDistance(i,j) << (FRACBITS+2); // Aim up fairly high
   mo = P_SpawnMissile(actor, &target, MT_FATSHOT);  // Launch fireball
   mo->momx >>= 1;
@@ -2147,7 +2147,7 @@ void A_Spawn(mobj_t *mo)
 {
   if (mo->state->misc1)
     {
-      P_SpawnMobj(mo->x, mo->y, (mo->state->misc2 << FRACBITS) + mo->z,
+      P_SpawnMobj(mo->x, mo->y, ((fixed_t)((unsigned int)mo->state->misc2 << FRACBITS)) + mo->z,
       mo->state->misc1 - 1);
     }
 }

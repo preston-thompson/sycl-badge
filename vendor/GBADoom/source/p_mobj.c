@@ -688,8 +688,8 @@ void P_SpawnPlayer (int n, const mapthing_t* mthing)
   if (!mthing->options)
     I_Error("P_SpawnPlayer: attempt to spawn player at unavailable start point");
   
-  x    = mthing->x << FRACBITS;
-  y    = mthing->y << FRACBITS;
+  x    = (fixed_t)((unsigned int)mthing->x << FRACBITS);
+  y    = (fixed_t)((unsigned int)mthing->y << FRACBITS);
   z    = ONFLOORZ;
   mobj = P_SpawnMobj (x,y,z, MT_PLAYER);
 
@@ -829,8 +829,8 @@ void P_SpawnMapThing (const mapthing_t* mthing)
     if (i == NUMMOBJTYPES)
         return;
 
-    x = mthing->x << FRACBITS;
-    y = mthing->y << FRACBITS;
+    x = (fixed_t)((unsigned int)mthing->x << FRACBITS);
+    y = (fixed_t)((unsigned int)mthing->y << FRACBITS);
 
     if (mobjinfo[i].flags & MF_SPAWNCEILING)
         z = ONCEILINGZ;
@@ -873,7 +873,7 @@ void P_SpawnPuff(fixed_t x,fixed_t y,fixed_t z)
   mobj_t* th;
   // killough 5/5/98: remove dependence on order of evaluation:
   int t = P_Random();
-  z += (t - P_Random())<<10;
+  z += ((fixed_t)((unsigned int)(t - P_Random())<<10));
 
   th = P_SpawnMobj (x,y,z, MT_PUFF);
   th->momz = FRACUNIT;
@@ -897,7 +897,7 @@ void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z,int damage)
   mobj_t* th;
   // killough 5/5/98: remove dependence on order of evaluation:
   int t = P_Random();
-  z += (t - P_Random())<<10;
+  z += ((fixed_t)((unsigned int)(t - P_Random())<<10));
   th = P_SpawnMobj(x,y,z, MT_BLOOD);
   th->momz = FRACUNIT*2;
   th->tics -= P_Random()&3;
@@ -965,7 +965,7 @@ mobj_t* P_SpawnMissile(mobj_t* source,mobj_t* dest,mobjtype_t type)
   if (dest->flags & MF_SHADOW)
     {  // killough 5/5/98: remove dependence on order of evaluation:
     int t = P_Random();
-    an += (t - P_Random())<<20;
+    an += ((fixed_t)((unsigned int)(t - P_Random())<<20));
     }
 
   th->angle = an;

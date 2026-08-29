@@ -325,11 +325,11 @@ static CONSTFUNC int SlopeDiv(unsigned num, unsigned den)
 
 static PUREFUNC int R_PointOnSide(fixed_t x, fixed_t y, const mapnode_t *node)
 {
-    fixed_t dx = (fixed_t)node->dx << FRACBITS;
-    fixed_t dy = (fixed_t)node->dy << FRACBITS;
+    fixed_t dx = (fixed_t)((unsigned int)node->dx << FRACBITS);
+    fixed_t dy = (fixed_t)((unsigned int)node->dy << FRACBITS);
 
-    fixed_t nx = (fixed_t)node->x << FRACBITS;
-    fixed_t ny = (fixed_t)node->y << FRACBITS;
+    fixed_t nx = (fixed_t)((unsigned int)node->x << FRACBITS);
+    fixed_t ny = (fixed_t)((unsigned int)node->y << FRACBITS);
 
     if (!dx)
         return x <= nx ? node->dy > 0 : node->dy < 0;
@@ -536,17 +536,9 @@ static const lighttable_t* R_LoadColorMap(int lightlevel)
 #define COLEXTRABITS 9
 #define COLBITS (FRACBITS + COLEXTRABITS)
 
-inline static void R_DrawColumnPixel(unsigned short* dest, const byte* source, const byte* colormap, unsigned int frac)
+inline static void R_DrawColumnPixel(byte* dest, const byte* source, const byte* colormap, unsigned int frac)
 {
-    pixel* d = (pixel*)dest;
-
-#ifdef GBA
-    *d = colormap[source[frac>>COLBITS]];
-#else
-    unsigned int color = colormap[source[frac>>COLBITS]];
-
-    *d = (color | (color << 8));
-#endif
+    *dest = colormap[source[frac>>COLBITS]];
 }
 
 static void R_DrawColumn (const draw_column_vars_t *dcvars)
@@ -560,7 +552,7 @@ static void R_DrawColumn (const draw_column_vars_t *dcvars)
     const byte *source = dcvars->source;
     const byte *colormap = dcvars->colormap;
 
-    unsigned short* dest = drawvars.byte_topleft + ScreenYToOffset(dcvars->yl) + dcvars->x;
+    byte* dest = (byte*)drawvars.byte_topleft + (dcvars->yl * SCREENPITCH * 2) + dcvars->x;
 
     const unsigned int		fracstep = (dcvars->iscale << COLEXTRABITS);
     unsigned int frac = (dcvars->texturemid + (dcvars->yl - centery)*dcvars->iscale) << COLEXTRABITS;
@@ -573,45 +565,45 @@ static void R_DrawColumn (const draw_column_vars_t *dcvars)
 
     while(l--)
     {
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
 
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
 
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
 
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
     }
 
     unsigned int r = (count & 15);
 
     switch(r)
     {
-        case 15:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 14:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 13:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 12:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 11:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 10:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 9:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 8:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 7:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 6:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 5:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 4:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 3:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 2:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        case 15:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 14:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 13:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 12:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 11:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 10:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 9:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 8:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 7:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 6:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 5:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 4:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 3:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 2:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
         case 1:     R_DrawColumnPixel(dest, source, colormap, frac);
     }
 }
@@ -627,7 +619,7 @@ static void R_DrawColumnHiRes(const draw_column_vars_t *dcvars)
     const byte *source = dcvars->source;
     const byte *colormap = dcvars->colormap;
 
-    volatile unsigned short* dest = drawvars.byte_topleft + ScreenYToOffset(dcvars->yl) + dcvars->x;
+    byte* dest = (byte*)drawvars.byte_topleft + (dcvars->yl * SCREENPITCH * 2) + dcvars->x;
 
     const unsigned int		fracstep = (dcvars->iscale << COLEXTRABITS);
     unsigned int frac = (dcvars->texturemid + (dcvars->yl - centery)*dcvars->iscale) << COLEXTRABITS;
@@ -652,12 +644,13 @@ static void R_DrawColumnHiRes(const draw_column_vars_t *dcvars)
 
     while(count--)
     {
-        unsigned int old = *dest;
         unsigned int color = colormap[source[frac>>COLBITS]];
 
-        *dest = ((old & mask) | (color << shift));
+        (void)mask;
+        (void)shift;
+        *dest = color;
 
-        dest+=SCREENWIDTH;
+        dest+=SCREENPITCH * 2;
         frac+=fracstep;
     }
 }
@@ -705,13 +698,13 @@ static void R_DrawFuzzColumn (const draw_column_vars_t *dcvars)
 
     const byte* colormap = &fullcolormap[6*256];
 
-    unsigned short* dest = drawvars.byte_topleft + ScreenYToOffset(dc_yl) + dcvars->x;
+    byte* dest = (byte*)drawvars.byte_topleft + (dc_yl * SCREENPITCH * 2) + dcvars->x;
 
     unsigned int fuzzpos = _g->fuzzpos;
 
     do
     {        
-        R_DrawColumnPixel(dest, (const byte*)&dest[fuzzoffset[fuzzpos]], colormap, 0); dest += SCREENWIDTH;  fuzzpos++;
+        R_DrawColumnPixel(dest, (const byte*)&dest[fuzzoffset[fuzzpos]], colormap, 0); dest += SCREENPITCH * 2;  fuzzpos++;
 
         if(fuzzpos >= 50)
             fuzzpos = 0;
@@ -954,7 +947,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int x1, int x2)
         dcvars.texturemid = dcvars.texturemid - viewz;
     }
 
-    dcvars.texturemid += (_g->sides[curline->sidenum].rowoffset << FRACBITS);
+    dcvars.texturemid += ((fixed_t)((unsigned int)(short)_g->sides[curline->sidenum].rowoffset << FRACBITS));
 
     const texture_t* texture = R_GetOrLoadTexture(texnum);
 
@@ -1079,7 +1072,7 @@ static void R_DrawSprite (const vissprite_t* spr)
 
         }
 
-        fixed_t gzt = spr->gz + (spr->patch->topoffset << FRACBITS);
+        fixed_t gzt = spr->gz + (((fixed_t)((unsigned int)(short)spr->patch->topoffset << FRACBITS)));
 
         if (ds->silhouette & SIL_TOP && gzt > ds->tsilheight)   // top sil
         {
@@ -1276,18 +1269,9 @@ static void R_DrawMasked(void)
 #pragma GCC push_options
 #pragma GCC optimize ("Ofast")
 
-inline static void R_DrawSpanPixel(unsigned short* dest, const byte* source, const byte* colormap, unsigned int position)
+inline static void R_DrawSpanPixel(byte* dest, const byte* source, const byte* colormap, unsigned int position)
 {
-
- pixel* d = (pixel*)dest;
-
-#ifdef GBA
-    *d = colormap[source[((position >> 4) & 0x0fc0) | (position >> 26)]];
-#else
-    unsigned int color = colormap[source[((position >> 4) & 0x0fc0) | (position >> 26)]];
-
-    *d = (color | (color << 8));
-#endif
+    *dest = colormap[source[((position >> 4) & 0x0fc0) | (position >> 26)]];
 }
 
 static void R_DrawSpan(unsigned int y, unsigned int x1, unsigned int x2, const draw_span_vars_t *dsvars)
@@ -1297,7 +1281,7 @@ static void R_DrawSpan(unsigned int y, unsigned int x1, unsigned int x2, const d
     const byte *source = dsvars->source;
     const byte *colormap = dsvars->colormap;
 
-    unsigned short* dest = drawvars.byte_topleft + ScreenYToOffset(y) + x1;
+    byte* dest = (byte*)drawvars.byte_topleft + (y * SCREENPITCH * 2) + x1;
 
     const unsigned int step = dsvars->step;
     unsigned int position = dsvars->position;
@@ -1354,7 +1338,7 @@ static void R_DrawSpan(unsigned int y, unsigned int x1, unsigned int x2, const d
 static void R_MapPlane(unsigned int y, unsigned int x1, unsigned int x2, draw_span_vars_t *dsvars)
 {    
     const fixed_t distance = FixedMul(planeheight, yslope[y]);
-    dsvars->step = ((FixedMul(distance,basexscale) << 10) & 0xffff0000) | ((FixedMul(distance,baseyscale) >> 6) & 0x0000ffff);
+    dsvars->step = (((unsigned int)FixedMul(distance,basexscale) << 10) & 0xffff0000) | ((FixedMul(distance,baseyscale) >> 6) & 0x0000ffff);
 
     fixed_t length = FixedMul (distance, distscale[x1]);
     angle_t angle = (viewangle + xtoviewangle[x1])>>ANGLETOFINESHIFT;
@@ -1363,7 +1347,7 @@ static void R_MapPlane(unsigned int y, unsigned int x1, unsigned int x2, draw_sp
     unsigned int xfrac =  viewx + FixedMul(finecosine[angle], length);
     unsigned int yfrac = -viewy - FixedMul(finesine[angle],   length);
 
-    dsvars->position = ((xfrac << 10) & 0xffff0000) | ((yfrac >> 6)  & 0x0000ffff);
+    dsvars->position = (((unsigned int)xfrac << 10) & 0xffff0000) | ((yfrac >> 6)  & 0x0000ffff);
 
     R_DrawSpan(y, x1, x2, dsvars);
 }
@@ -1551,9 +1535,9 @@ static void R_ProjectSprite (mobj_t* thing, int lightlevel)
      * cph 2003/08/1 - fraggle points out that this offset must be flipped
      * if the sprite is flipped; e.g. FreeDoom imp is messed up by this. */
     if (flip)
-        tx -= (patch->width - patch->leftoffset) << FRACBITS;
+        tx -= ((fixed_t)((unsigned int)(short)(patch->width - patch->leftoffset) << FRACBITS));
     else
-        tx -= patch->leftoffset << FRACBITS;
+        tx -= ((fixed_t)((unsigned int)(short)patch->leftoffset << FRACBITS));
 
     const fixed_t xscale = FixedDiv(projection, tz);
 
@@ -1592,7 +1576,7 @@ static void R_ProjectSprite (mobj_t* thing, int lightlevel)
     vis->gx = fx;
     vis->gy = fy;
     vis->gz = fz;
-    vis->texturemid = (fz + (patch->topoffset << FRACBITS)) - viewz;
+    vis->texturemid = (fz + (((fixed_t)((unsigned int)(short)patch->topoffset << FRACBITS)))) - viewz;
     vis->x1 = x1 < 0 ? 0 : x1;
     vis->x2 = x2 >= SCREENWIDTH ? SCREENWIDTH-1 : x2;
 
@@ -2211,7 +2195,7 @@ static void R_StoreWallRange(const int start, const int stop)
         else        // top of texture at top
             rw_midtexturemid = worldtop;
 
-        rw_midtexturemid += FixedMod( (sidedef->rowoffset << FRACBITS), textureheight[midtexture]);
+        rw_midtexturemid += FixedMod( ((fixed_t)((unsigned int)(short)sidedef->rowoffset << FRACBITS)), textureheight[midtexture]);
 
         ds_p->silhouette = SIL_BOTH;
         ds_p->sprtopclip = screenheightarray;
@@ -2294,7 +2278,7 @@ static void R_StoreWallRange(const int start, const int stop)
             toptexture = texturetranslation[sidedef->toptexture];
             rw_toptexturemid = linedef->flags & ML_DONTPEGTOP ? worldtop :
                                                                         backsector->ceilingheight+textureheight[sidedef->toptexture]-viewz;
-            rw_toptexturemid += FixedMod( (sidedef->rowoffset << FRACBITS), textureheight[toptexture]);
+            rw_toptexturemid += FixedMod( ((fixed_t)((unsigned int)(short)sidedef->rowoffset << FRACBITS)), textureheight[toptexture]);
         }
 
         if (worldlow > worldbottom) // bottom texture
@@ -2302,7 +2286,7 @@ static void R_StoreWallRange(const int start, const int stop)
             bottomtexture = texturetranslation[sidedef->bottomtexture];
             rw_bottomtexturemid = linedef->flags & ML_DONTPEGBOTTOM ? worldtop : worldlow;
 
-            rw_bottomtexturemid += FixedMod( (sidedef->rowoffset << FRACBITS), textureheight[bottomtexture]);
+            rw_bottomtexturemid += FixedMod( ((fixed_t)((unsigned int)(short)sidedef->rowoffset << FRACBITS)), textureheight[bottomtexture]);
         }
 
         // allocate space for masked texture tables
@@ -2321,7 +2305,7 @@ static void R_StoreWallRange(const int start, const int stop)
     {
         rw_offset = FixedMul (hyp, -finesine[offsetangle >>ANGLETOFINESHIFT]);
 
-        rw_offset += (sidedef->textureoffset << FRACBITS) + curline->offset;
+        rw_offset += ((fixed_t)((unsigned int)(short)sidedef->textureoffset << FRACBITS)) + curline->offset;
 
         rw_centerangle = ANG90 + viewangle - rw_normalangle;
 
@@ -2711,15 +2695,15 @@ static boolean R_CheckBBox(const short *bspcoord)
 
         // Find the corners of the box
         // that define the edges from current viewpoint.
-        boxpos = (viewx <= ((fixed_t)bspcoord[BOXLEFT]<<FRACBITS) ? 0 : viewx < ((fixed_t)bspcoord[BOXRIGHT]<<FRACBITS) ? 1 : 2) +
-                (viewy >= ((fixed_t)bspcoord[BOXTOP]<<FRACBITS) ? 0 : viewy > ((fixed_t)bspcoord[BOXBOTTOM]<<FRACBITS) ? 4 : 8);
+        boxpos = (viewx <= ((fixed_t)((unsigned int)(short)bspcoord[BOXLEFT]<<FRACBITS)) ? 0 : viewx < ((fixed_t)((unsigned int)(short)bspcoord[BOXRIGHT]<<FRACBITS)) ? 1 : 2) +
+                (viewy >= ((fixed_t)((unsigned int)(short)bspcoord[BOXTOP]<<FRACBITS)) ? 0 : viewy > ((fixed_t)((unsigned int)(short)bspcoord[BOXBOTTOM]<<FRACBITS)) ? 4 : 8);
 
         if (boxpos == 5)
             return true;
 
         check = checkcoord[boxpos];
-        angle1 = R_PointToAngle (((fixed_t)bspcoord[check[0]]<<FRACBITS), ((fixed_t)bspcoord[check[1]]<<FRACBITS)) - viewangle;
-        angle2 = R_PointToAngle (((fixed_t)bspcoord[check[2]]<<FRACBITS), ((fixed_t)bspcoord[check[3]]<<FRACBITS)) - viewangle;
+        angle1 = R_PointToAngle (((fixed_t)((unsigned int)(short)bspcoord[check[0]]<<FRACBITS)), ((fixed_t)((unsigned int)(short)bspcoord[check[1]]<<FRACBITS))) - viewangle;
+        angle2 = R_PointToAngle (((fixed_t)((unsigned int)(short)bspcoord[check[2]]<<FRACBITS)), ((fixed_t)((unsigned int)(short)bspcoord[check[3]]<<FRACBITS))) - viewangle;
     }
 
     // cph - replaced old code, which was unclear and badly commented
@@ -3115,10 +3099,10 @@ boolean P_CrossBSPNode(int bspnum)
         const mapnode_t *bsp = nodes + bspnum;
 
         divline_t dl;
-        dl.x = ((fixed_t)bsp->x << FRACBITS);
-        dl.y = ((fixed_t)bsp->y << FRACBITS);
-        dl.dx = ((fixed_t)bsp->dx << FRACBITS);
-        dl.dy = ((fixed_t)bsp->dy << FRACBITS);
+        dl.x = (fixed_t)((unsigned int)bsp->x << FRACBITS);
+        dl.y = (fixed_t)((unsigned int)bsp->y << FRACBITS);
+        dl.dx = (fixed_t)((unsigned int)bsp->dx << FRACBITS);
+        dl.dy = (fixed_t)((unsigned int)bsp->dy << FRACBITS);
 
         int side,side2;
         side = P_DivlineSide(_g->los.strace.x,_g->los.strace.y,&dl)&1;
