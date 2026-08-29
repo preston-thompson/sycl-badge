@@ -2900,31 +2900,17 @@ void V_DrawPatchNoScale(int x, int y, const patch_t* patch)
     {
         const column_t* column = (const column_t*)((const byte*)patch + patch->columnofs[col]);
 
-        unsigned int odd_addr = (size_t)desttop & 1;
-
-        byte* desttop_even = (byte*)((size_t)desttop & ~1);
-
         // step through the posts in a column
         while (column->topdelta != 0xff)
         {
             const byte* source = (const byte*)column + 3;
-            byte* dest = desttop_even + (ScreenYToOffset(column->topdelta) << 1);
+            byte* dest = desttop + (ScreenYToOffset(column->topdelta) << 1);
 
             unsigned int count = column->length;
 
             while (count--)
             {
-                unsigned int color = *source++;
-                volatile unsigned short* dest16 = (volatile unsigned short*)dest;
-
-                unsigned int old = *dest16;
-
-                //The GBA must write in 16bits.
-                if(odd_addr)
-                    *dest16 = (old & 0xff) | (color << 8);
-                else
-                    *dest16 = ((color & 0xff) | (old & 0xff00));
-
+                *dest = *source++;
                 dest += (SCREENPITCH * 2);
             }
 
