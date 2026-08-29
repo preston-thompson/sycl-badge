@@ -47,7 +47,7 @@ int I_GetVideoHeight_e32(void) { return SCREENHEIGHT; }
 
 int I_GetTime_e32(void)
 {
-    return (int)(sycl_doom_micros() / 28571u);
+    return (int)(sycl_doom_micros() / (1000000u / TICRATE));
 }
 
 void I_ProcessKeyEvents(void)
@@ -69,6 +69,11 @@ void I_ProcessKeyEvents(void)
 
 void I_Error(const char *error, ...)
 {
-    (void)error;
+    char buffer[128];
+    va_list args;
+    va_start(args, error);
+    vsnprintf(buffer, sizeof(buffer), error, args);
+    va_end(args);
+    sycl_doom_error(buffer);
     while (1) {}
 }

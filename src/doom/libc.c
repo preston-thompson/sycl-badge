@@ -216,15 +216,90 @@ void exit(int status)
 
 int vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 {
-    (void)ap;
-    size_t i = 0;
+    size_t out = 0;
+    int written = 0;
     if (size == 0) return 0;
-    while (fmt[i] && i + 1 < size) {
-        str[i] = fmt[i];
-        i++;
+
+    while (*fmt) {
+        if (*fmt != '%') {
+            if (out + 1 < size) str[out++] = *fmt;
+            written++;
+            fmt++;
+            continue;
+        }
+
+        fmt++;
+        if (*fmt == '%') {
+            if (out + 1 < size) str[out++] = '%';
+            written++;
+            fmt++;
+            continue;
+        }
+
+        char pad = ' ';
+        int width = 0;
+        int precision = -1;
+        if (*fmt == '0') {
+            pad = '0';
+            fmt++;
+        }
+        while (isdigit((unsigned char)*fmt)) {
+            width = width * 10 + (*fmt++ - '0');
+        }
+        if (*fmt == '.') {
+            fmt++;
+            precision = 0;
+            while (isdigit((unsigned char)*fmt)) {
+                precision = precision * 10 + (*fmt++ - '0');
+            }
+            if (width == 0) width = precision;
+            if (pad == ' ') pad = '0';
+        }
+
+        char tmp[34];
+        const char *text = tmp;
+        int text_len = 0;
+        char spec = *fmt++;
+
+        switch (spec) {
+        case 'd':
+        case 'i':
+            itoa(va_arg(ap, int), tmp, 10);
+            text_len = (int)strlen(tmp);
+            break;
+        case 'u':
+            itoa((int)va_arg(ap, unsigned int), tmp, 10);
+            text_len = (int)strlen(tmp);
+            break;
+        case 's':
+            text = va_arg(ap, const char *);
+            if (!text) text = "(null)";
+            text_len = (int)strlen(text);
+            if (precision >= 0 && text_len > precision) text_len = precision;
+            break;
+        case 'c':
+            tmp[0] = (char)va_arg(ap, int);
+            tmp[1] = 0;
+            text_len = 1;
+            break;
+        default:
+            tmp[0] = spec;
+            tmp[1] = 0;
+            text_len = 1;
+            break;
+        }
+
+        for (int p = text_len; p < width; p++) {
+            if (out + 1 < size) str[out++] = pad;
+            written++;
+        }
+        for (int i = 0; i < text_len; i++) {
+            if (out + 1 < size) str[out++] = text[i];
+            written++;
+        }
     }
-    str[i] = 0;
-    return (int)i;
+    str[out] = 0;
+    return written;
 }
 
 int vsprintf(char *str, const char *fmt, va_list ap) { return vsnprintf(str, (size_t)-1, fmt, ap); }

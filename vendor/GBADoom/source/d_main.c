@@ -73,6 +73,7 @@
 #include "m_cheat.h"
 
 #include "doom_iwad.h"
+#include "badge_platform.h"
 #include "global_data.h"
 
 void GetFirstMap(int *ep, int *map); // Ty 08/29/98 - add "-warp x" functionality
@@ -255,6 +256,7 @@ static void D_Display (void)
 
 static void D_DoomLoop(void)
 {
+    sycl_doom_status("doom loop");
     for (;;)
     {
         // frame syncronous IO operations
@@ -361,11 +363,13 @@ void D_AdvanceDemo (void)
 
 static void D_SetPageName(const char *name)
 {
+    sycl_doom_status("set page");
     _g->pagelump = W_GetNumForName(name);
 }
 
 static void D_DrawTitle1(const char *name)
 {
+    sycl_doom_status("draw title1");
     S_StartMusic(mus_intro);
     _g->pagetic = (TICRATE*30);
     D_SetPageName(name);
@@ -373,6 +377,7 @@ static void D_DrawTitle1(const char *name)
 
 static void D_DrawTitle2(const char *name)
 {
+    sycl_doom_status("draw title2");
     S_StartMusic(mus_dm2ttl);
     D_SetPageName(name);
 }
@@ -446,6 +451,7 @@ const demostates[][4] =
 
 void D_DoAdvanceDemo(void)
 {
+    sycl_doom_status("advance demo");
     _g->player.playerstate = PST_LIVE;  /* not reborn */
     _g->advancedemo = _g->usergame = false;
     _g->gameaction = ga_nothing;
@@ -465,9 +471,11 @@ void D_DoAdvanceDemo(void)
 //
 void D_StartTitle (void)
 {
+    sycl_doom_status("title enter");
     _g->gameaction = ga_nothing;
     _g->demosequence = -1;
     D_AdvanceDemo();
+    sycl_doom_status("title advanced");
 }
 
 //
@@ -620,6 +628,7 @@ static void IdentifyVersion()
 
 static void D_DoomMainSetup(void)
 {
+    sycl_doom_status("identify wad");
     IdentifyVersion();
 
     // jff 1/24/98 end of set to both working and command line value
@@ -678,43 +687,53 @@ static void D_DoomMainSetup(void)
 
     // init subsystems
 
+    sycl_doom_status("reload defaults");
     G_ReloadDefaults();    // killough 3/4/98: set defaults just loaded.
     // jff 3/24/98 this sets startskill if it was -1
 
     // CPhipps - move up netgame init
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"D_InitNetGame.");
+    sycl_doom_status("init netgame");
     D_InitNetGame();
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"W_Init: Init WADfiles.");
+    sycl_doom_status("wad init");
     W_Init(); // CPhipps - handling of wadfiles init changed
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"M_Init: Init misc info.");
+    sycl_doom_status("misc init");
     M_Init();
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"R_Init: DOOM refresh daemon.");
+    sycl_doom_status("render init");
     R_Init();
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"P_Init: Init Playloop state.");
+    sycl_doom_status("play init");
     P_Init();
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"S_Init: Setting up sound.");
+    sycl_doom_status("sound init");
     S_Init(_g->snd_SfxVolume /* *8 */, _g->snd_MusicVolume /* *8*/ );
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"HU_Init: Setting up HUD.");
+    sycl_doom_status("hud init");
     HU_Init();
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"ST_Init: Init status bar.");
+    sycl_doom_status("status init");
     ST_Init();
 
     lprintf(LO_INFO,"G_LoadSettings: Loading settings.");
+    sycl_doom_status("load settings");
     G_LoadSettings();
 
     _g->idmusnum = -1; //jff 3/17/98 insure idmus number is blank
@@ -723,6 +742,7 @@ static void D_DoomMainSetup(void)
 
     _g->highDetail = false;
 
+    sycl_doom_status("graphics init");
     I_InitGraphics();
 
     if (timedemo)
@@ -734,6 +754,7 @@ static void D_DoomMainSetup(void)
     }
     else
     {
+        sycl_doom_status("start title");
         D_StartTitle();                 // start up intro loop
     }
 }

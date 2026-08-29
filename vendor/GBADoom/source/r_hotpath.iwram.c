@@ -60,6 +60,7 @@
 #include "st_stuff.h"
 #include "i_main.h"
 #include "i_system.h"
+#include "i_system_e32.h"
 #include "g_game.h"
 #include "m_random.h"
 
@@ -3297,26 +3298,11 @@ void P_RunThinkers (void)
 
 
 
-static int I_GetTime_e32(void)
-{
-    int thistimereply = *((unsigned short*)(0x400010C));
-
-    return thistimereply;
-}
-
-
 int I_GetTime(void)
 {
     int thistimereply;
 
-#ifndef GBA
-
-    clock_t now = clock();
-
-    thistimereply = (int)((double)now / ((double)CLOCKS_PER_SEC / (double)TICRATE));
-#else
     thistimereply = I_GetTime_e32();
-#endif
 
     if (thistimereply < _g->lasttimereply)
     {

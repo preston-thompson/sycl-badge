@@ -32,7 +32,9 @@ pub fn main() !void {
     lcd.drawString(20, 74, "GBADoom next", lcd.CYAN, lcd.BLACK, 1);
     while (lcd.isBusy()) {}
 
+    doomStatus("enter doom");
     _ = sycl_doom_main();
+    doomStatus("doom returned");
 
     var led_deadline = timer.micros() + 250_000;
     while (true) {
@@ -47,6 +49,18 @@ pub fn main() !void {
     }
 }
 
+fn doomStatus(message: []const u8) void {
+    lcd.clearScreen(lcd.BLACK);
+    while (lcd.isBusy()) {}
+    lcd.drawString(0, 0, "DOOM STATUS", lcd.CYAN, lcd.BLACK, 1);
+    lcd.drawString(0, 16, message, lcd.WHITE, lcd.BLACK, 1);
+    while (lcd.isBusy()) {}
+}
+
+export fn sycl_doom_status(message: [*:0]const u8) void {
+    doomStatus(std.mem.sliceTo(message, 0));
+}
+
 export fn sycl_doom_micros() u64 {
     return timer.micros();
 }
@@ -55,6 +69,20 @@ export fn sycl_doom_present_rgb565(buffer: [*]const u16, width: u32, height: u32
     if (width == lcd.width and height == lcd.height) {
         lcd.writeBuffer(0, 0, lcd.width, lcd.height, buffer[0 .. lcd.width * lcd.height]);
         return;
+    }
+
+    const copy_width: u32 = @min(width, lcd.width);
+    const copy_height: u32 = @min(height, lcd.height);
+    const src_x: u32 = if (width > copy_width) (width - copy_width) / 2 else 0;
+    const src_y: u32 = if (height > copy_height) (height - copy_height) / 2 else 0;
+    const dst_x: u16 = @intCast((lcd.width - copy_width) / 2);
+    const dst_y: u16 = @intCast((lcd.height - copy_height) / 2);
+
+    var y: u32 = 0;
+    while (y < copy_height) : (y += 1) {
+        const row_start = (src_y + y) * width + src_x;
+        lcd.writeBuffer(dst_x, @intCast(dst_y + y), @intCast(copy_width), 1, buffer[row_start .. row_start + copy_width]);
+        while (lcd.isBusy()) {}
     }
 }
 
@@ -70,6 +98,21 @@ export fn sycl_doom_buttons() u32 {
     if (gpio.isButtonPressed(board.joystick_right)) buttons |= 1 << 7;
     if (gpio.isButtonPressed(board.joystick_click)) buttons |= 1 << 8;
     return buttons;
+}
+
+export fn sycl_doom_error(message: [*:0]const u8) void {
+    const text = std.mem.sliceTo(message, 0);
+    lcd.clearScreen(lcd.BLACK);
+    while (lcd.isBusy()) {}
+    lcd.drawString(0, 0, "DOOM ERROR", lcd.RED, lcd.BLACK, 1);
+    lcd.drawString(0, 16, text[0..@min(text.len, 20)], lcd.WHITE, lcd.BLACK, 1);
+    if (text.len > 20) {
+        lcd.drawString(0, 28, text[20..@min(text.len, 40)], lcd.WHITE, lcd.BLACK, 1);
+    }
+    if (text.len > 40) {
+        lcd.drawString(0, 40, text[40..@min(text.len, 60)], lcd.WHITE, lcd.BLACK, 1);
+    }
+    while (lcd.isBusy()) {}
 }
 
 comptime {

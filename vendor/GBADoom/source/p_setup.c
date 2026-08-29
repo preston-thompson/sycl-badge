@@ -49,6 +49,7 @@
 #include "s_sound.h"
 #include "lprintf.h" //jff 10/6/98 for debug outputs
 #include "v_video.h"
+#include "badge_platform.h"
 
 #include "global_data.h"
 
@@ -61,10 +62,18 @@ static void P_LoadVertexes (int lump)
 {
   // Determine number of lumps:
   //  total lump length / vertex record length.
-  _g->numvertexes = W_LumpLength(lump) / sizeof(vertex_t);
+  _g->numvertexes = W_LumpLength(lump) / sizeof(mapvertex_t);
 
   // Allocate zone memory for buffer.
-  _g->vertexes = W_CacheLumpNum(lump);
+  const mapvertex_t *data = W_CacheLumpNum(lump);
+  vertex_t *vertexes = Z_Calloc(_g->numvertexes, sizeof(vertex_t), PU_LEVEL, 0);
+
+  for (int i = 0; i < _g->numvertexes; i++) {
+    vertexes[i].x = SHORT(data[i].x) << FRACBITS;
+    vertexes[i].y = SHORT(data[i].y) << FRACBITS;
+  }
+
+  _g->vertexes = vertexes;
 
 }
 
@@ -75,11 +84,51 @@ static void P_LoadVertexes (int lump)
 
 static void P_LoadSegs (int lump)
 {
-    int numsegs = W_LumpLength(lump) / sizeof(seg_t);
-    _g->segs = (const seg_t *)W_CacheLumpNum(lump);
+    int numsegs = W_LumpLength(lump) / sizeof(mapseg_t);
+    const mapseg_t *data = W_CacheLumpNum(lump);
+    seg_t *segs = Z_Calloc(numsegs, sizeof(seg_t), PU_LEVEL, 0);
 
-    if (!numsegs)
+    if ((!data) || (!numsegs))
       I_Error("P_LoadSegs: no segs in level");
+
+    for (int i = 0; i < numsegs; i++) {
+        const unsigned short v1 = SHORT(data[i].v1);
+        const unsigned short v2 = SHORT(data[i].v2);
+        const unsigned short linenum = SHORT(data[i].linedef);
+        const unsigned short sidenum = SHORT(data[i].side);
+
+        if (v1 >= _g->numvertexes || v2 >= _g->numvertexes)
+            I_Error("P_LoadSegs: bad vertex index");
+        if (linenum >= _g->numlines)
+            I_Error("P_LoadSegs: bad linedef index");
+        if (sidenum > 1)
+            I_Error("P_LoadSegs: bad side index");
+
+        const line_t *line = &_g->lines[linenum];
+
+        if (line->sidenum[sidenum] >= _g->numsides && line->sidenum[sidenum] != NO_INDEX)
+            I_Error("P_LoadSegs: bad sidedef index");
+        if (line->sidenum[sidenum ^ 1] >= _g->numsides && line->sidenum[sidenum ^ 1] != NO_INDEX)
+            I_Error("P_LoadSegs: bad back sidedef index");
+
+        segs[i].v1 = _g->vertexes[v1];
+        segs[i].v2 = _g->vertexes[v2];
+        segs[i].angle = SHORT(data[i].angle) << FRACBITS;
+        segs[i].offset = SHORT(data[i].offset) << FRACBITS;
+        segs[i].linenum = linenum;
+        segs[i].sidenum = line->sidenum[sidenum];
+        segs[i].frontsectornum = NO_INDEX;
+        segs[i].backsectornum = NO_INDEX;
+
+        if (segs[i].sidenum != NO_INDEX) {
+            segs[i].frontsectornum = (unsigned short)(_g->sides[segs[i].sidenum].sector - _g->sectors);
+        }
+        if (line->sidenum[sidenum ^ 1] != NO_INDEX) {
+            segs[i].backsectornum = (unsigned short)(_g->sides[line->sidenum[sidenum ^ 1]].sector - _g->sectors);
+        }
+    }
+
+    _g->segs = segs;
 }
 
 //
@@ -214,15 +263,48 @@ static void P_LoadThings (int lump)
 static void P_LoadLineDefs (int lump)
 {
     int  i;
+    const maplinedef_t *data = W_CacheLumpNum(lump);
 
-    _g->numlines = W_LumpLength (lump) / sizeof(line_t);
-    _g->lines = W_CacheLumpNum (lump);
+    _g->numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
+    _g->lines = Z_Calloc(_g->numlines, sizeof(line_t), PU_LEVEL, 0);
 
     _g->linedata = Z_Calloc(_g->numlines,sizeof(linedata_t),PU_LEVEL,0);
 
     for (i=0; i<_g->numlines; i++)
     {
-        _g->linedata[i].special = _g->lines[i].const_special;
+        line_t *ld = &_g->lines[i];
+        const maplinedef_t *mld = &data[i];
+        const unsigned short v1 = SHORT(mld->v1);
+        const unsigned short v2 = SHORT(mld->v2);
+
+        if (v1 >= _g->numvertexes || v2 >= _g->numvertexes)
+            I_Error("P_LoadLineDefs: bad vertex index");
+
+        ld->v1 = _g->vertexes[v1];
+        ld->v2 = _g->vertexes[v2];
+        ld->lineno = i;
+        ld->dx = ld->v2.x - ld->v1.x;
+        ld->dy = ld->v2.y - ld->v1.y;
+        ld->flags = SHORT(mld->flags);
+        ld->const_special = SHORT(mld->special);
+        ld->tag = SHORT(mld->tag);
+        ld->sidenum[0] = SHORT(mld->sidenum[0]);
+        ld->sidenum[1] = SHORT(mld->sidenum[1]);
+
+        if (!ld->dx)
+            ld->slopetype = ST_VERTICAL;
+        else if (!ld->dy)
+            ld->slopetype = ST_HORIZONTAL;
+        else if ((ld->dy > 0) == (ld->dx > 0))
+            ld->slopetype = ST_POSITIVE;
+        else
+            ld->slopetype = ST_NEGATIVE;
+
+        M_ClearBox(ld->bbox);
+        M_AddToBox(ld->bbox, ld->v1.x, ld->v1.y);
+        M_AddToBox(ld->bbox, ld->v2.x, ld->v2.y);
+
+        _g->linedata[i].special = ld->const_special;
     }
 }
 
@@ -508,19 +590,30 @@ void P_SetupLevel(int episode, int map, int playermask, skill_t skill)
 
     _g->leveltime = 0; _g->totallive = 0;
 
+    sycl_doom_status("load vertexes");
     P_LoadVertexes  (lumpnum+ML_VERTEXES);
+    sycl_doom_status("load sectors");
     P_LoadSectors   (lumpnum+ML_SECTORS);
+    sycl_doom_status("load sidedefs");
     P_LoadSideDefs  (lumpnum+ML_SIDEDEFS);
+    sycl_doom_status("load linedefs");
     P_LoadLineDefs  (lumpnum+ML_LINEDEFS);
+    sycl_doom_status("load sidedefs2");
     P_LoadSideDefs2 (lumpnum+ML_SIDEDEFS);
+    sycl_doom_status("load linedefs2");
     P_LoadLineDefs2 (lumpnum+ML_LINEDEFS);
+    sycl_doom_status("load blockmap");
     P_LoadBlockMap  (lumpnum+ML_BLOCKMAP);
 
 
+    sycl_doom_status("load subsectors");
     P_LoadSubsectors(lumpnum + ML_SSECTORS);
+    sycl_doom_status("load nodes");
     P_LoadNodes(lumpnum + ML_NODES);
+    sycl_doom_status("load segs");
     P_LoadSegs(lumpnum + ML_SEGS);
 
+    sycl_doom_status("group lines");
     P_GroupLines();
 
     // reject loading and underflow padding separated out into new function
@@ -538,6 +631,7 @@ void P_SetupLevel(int episode, int map, int playermask, skill_t skill)
 
     P_MapStart();
 
+    sycl_doom_status("load things");
     P_LoadThings(lumpnum+ML_THINGS);
 
     {
