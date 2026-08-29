@@ -66,15 +66,15 @@ void V_DrawBackground(const char* flatname)
 
     for(unsigned int y = 0; y < SCREENHEIGHT; y++)
     {
-        for(unsigned int x = 0; x < 240; x+=64)
+        for(unsigned int x = 0; x < SCREENWIDTH; x+=64)
         {
             unsigned short* d = &dest[ ScreenYToOffset(y) + (x >> 1)];
             const byte* s = &src[((y&63) * 64) + (x&63)];
 
             unsigned int len = 64;
 
-            if( (240-x) < 64)
-                len = 240-x;
+            if( (SCREENWIDTH-x) < 64)
+                len = SCREENWIDTH-x;
 
             BlockCopy(d, s, len);
         }
@@ -95,8 +95,8 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
 
     int   col = 0;
 
-    const int   DX  = (240<<FRACBITS) / 320;
-    const int   DXI = (320<<FRACBITS) / 240;
+    const int   DX  = (SCREENWIDTH<<FRACBITS) / 320;
+    const int   DXI = (320<<FRACBITS) / SCREENWIDTH;
     const int   DY  = ((SCREENHEIGHT<<FRACBITS)+(FRACUNIT-1)) / 200;
     const int   DYI = (200<<FRACBITS) / SCREENHEIGHT;
 
@@ -116,7 +116,7 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
 
         const column_t* column = (const column_t *)((const byte*)patch + patch->columnofs[colindex]);
 
-        if (dc_x >= 240)
+        if (dc_x >= SCREENWIDTH)
             break;
 
         // step through the posts in a column

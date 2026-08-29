@@ -78,62 +78,27 @@
 //*****************************************
 
 #ifndef GBA
-static byte vram1_spare[2560];
-static byte vram2_spare[2560];
-static byte vram3_spare[1024];
-#else
-    #define vram1_spare ((byte*)0x6000000+0x9600)
-    #define vram2_spare ((byte*)0x600A000+0x9600)
-    #define vram3_spare ((byte*)0x7000000)
-#endif
-
 //Stuff alloc'd in OAM memory.
-
-//512 bytes.
-static unsigned int* columnCacheEntries = (unsigned int*)&vram3_spare[0];
-
-//240 bytes.
-short* floorclip = (short*)&vram3_spare[512];
-
-//240 bytes.
-short* ceilingclip = (short*)&vram3_spare[512+240];
-
-//992 bytes used. 32 byes left.
-
-
+unsigned int columnCacheEntries[128];
+short floorclip[MAX_SCREENWIDTH];
+short ceilingclip[MAX_SCREENWIDTH];
 
 //Stuff alloc'd in VRAM1 memory.
-
-//580 bytes
-const fixed_t* yslope_vram = (const fixed_t*)&vram1_spare[0];
-
-//480 bytes
-const fixed_t* distscale_vram = (const fixed_t*)&vram1_spare[580];
-
-//484 bytes.
-const angle_t* xtoviewangle_vram = (const angle_t*)&vram1_spare[580+480];
-
-//240 Bytes.
-short* wipe_y_lookup = (short*)&vram1_spare[580+480+484];
-
-//384 Bytes
-vissprite_t** vissprite_ptrs = (vissprite_t**)&vram1_spare[580+480+484+240];
-
-//2168 bytes used. 392 bytes left.
-
+fixed_t yslope_vram[MAX_SCREENHEIGHT];
+fixed_t distscale_vram[MAX_SCREENWIDTH];
+angle_t xtoviewangle_vram[MAX_SCREENWIDTH+1];
+short wipe_y_lookup[MAX_SCREENWIDTH];
+vissprite_t* vissprite_ptrs[128]; // MAXVISSPRITES is usually 128
 
 //Stuff alloc'd in VRAM2 memory.
-
-//240 bytes
-short* screenheightarray = (short*)&vram2_spare[0];
-
-//240 bytes
-short* negonearray = (short*)&vram2_spare[240];
-
+short screenheightarray[MAX_SCREENWIDTH];
+short negonearray[MAX_SCREENWIDTH];
 
 #define yslope yslope_vram
 #define distscale distscale_vram
 #define xtoviewangle xtoviewangle_vram
+
+#endif // !GBA
 
 //*****************************************
 //Column cache stuff.
@@ -2960,7 +2925,7 @@ void V_DrawPatchNoScale(int x, int y, const patch_t* patch)
                 else
                     *dest16 = ((color & 0xff) | (old & 0xff00));
 
-                dest += 240;
+                dest += (SCREENPITCH * 2);
             }
 
             column = (const column_t*)((const byte*)column + column->length + 4);
