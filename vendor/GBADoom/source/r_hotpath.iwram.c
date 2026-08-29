@@ -304,12 +304,10 @@ inline fixed_t CONSTFUNC FixedMul(fixed_t a, fixed_t b)
 
 static CONSTFUNC int SlopeDiv(unsigned num, unsigned den)
 {
-    den = den >> 8;
-
-    if (den == 0)
+    if (den < 512)
         return SLOPERANGE;
 
-    const unsigned int ans = FixedApproxDiv(num << 3, den) >> FRACBITS;
+    unsigned int ans = (unsigned int)(((uint_64_t)num << 3) / (den >> 8));
 
     return (ans <= SLOPERANGE) ? ans : SLOPERANGE;
 }
@@ -477,7 +475,7 @@ static CONSTFUNC fixed_t R_PointToDist(fixed_t x, fixed_t y)
         dy = t;
     }
 
-    return FixedApproxDiv(dx, finesine[(tantoangle[FixedApproxDiv(dy,dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT]);
+    return FixedDiv(dx, finesine[(tantoangle[FixedDiv(dy,dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT]);
 }
 
 static const lighttable_t* R_ColourMap(int lightlevel)
