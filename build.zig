@@ -80,6 +80,20 @@ pub fn build(b: *Build) void {
     mb.install_firmware(kernel, .{ .format = .elf });
     mb.install_firmware(kernel, .{ .format = .{ .uf2 = .{ .family_id = .RP2350_ARM_S } } });
 
+    const doom = mb.add_firmware(.{
+        .name = "doom-firmware",
+        .target = badge_v2_target,
+        .optimize = .ReleaseSmall,
+        .root_source_file = b.path("src/doom.zig"),
+        .linker_script = .{
+            .file = b.path("src/os/linker.ld"),
+            .generate = .none,
+        },
+        .stack = .{ .symbol_name = "__stack" },
+    });
+    mb.install_firmware(doom, .{ .format = .elf });
+    mb.install_firmware(doom, .{ .format = .{ .uf2 = .{ .family_id = .RP2350_ARM_S } } });
+
     // Build test XIP cart (runs on Core 1 with cart_runtime - no microzig)
     add_microzig_cart(b, &dep, .{
         .name = "lcd-test",
