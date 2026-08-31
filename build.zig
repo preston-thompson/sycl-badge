@@ -86,7 +86,7 @@ pub fn build(b: *Build) void {
         .optimize = .ReleaseSmall,
         .root_source_file = b.path("src/doom.zig"),
         .linker_script = .{
-            .file = b.path("src/os/linker.ld"),
+            .file = b.path("src/doom/linker.ld"),
             .generate = .none,
         },
         .stack = .{ .symbol_name = "__stack" },
@@ -97,6 +97,9 @@ pub fn build(b: *Build) void {
     });
     doom.artifact.linkLibrary(foundation_dep.artifact("foundation"));
 
+    doom.artifact.linker_allow_shlib_undefined = true;
+    doom.artifact.setLinkerScript(b.path("src/doom/linker.ld"));
+
     doom.artifact.addIncludePath(b.path("vendor/GBADoom/include"));
     doom.artifact.addIncludePath(b.path("src/doom"));
     doom.artifact.addIncludePath(b.path("vendor/printf"));
@@ -105,6 +108,7 @@ pub fn build(b: *Build) void {
         .files = &doom_c_sources,
         .flags = &doom_c_flags,
     });
+    doom.artifact.addAssemblyFile(b.path("src/doom/doom_iwad.S"));
     mb.install_firmware(doom, .{ .format = .elf });
     mb.install_firmware(doom, .{ .format = .{ .uf2 = .{ .family_id = .RP2350_ARM_S } } });
 
@@ -239,7 +243,7 @@ const doom_c_flags = [_][]const u8{
     "-Wno-deprecated-non-prototype",
     "-DPRINTF_SUPPORT_DECIMAL_SPECIFIERS=0",
     "-DPRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS=0",
-    "-DPRINTF_ALIAS_STANDARD_FUNCTION_NAMES=1",
+    "-DPRINTF_ALIAS_STANDARD_FUNCTION_NAMES_HARD=1",
 };
 
 const doom_c_sources = [_][]const u8{
@@ -247,6 +251,7 @@ const doom_c_sources = [_][]const u8{
     "vendor/printf/printf.c",
     "src/doom/i_system_badge.c",
     "src/doom/i_video_badge.c",
+    "src/doom/sycl_doom_main.c",
     "vendor/GBADoom/source/am_map.c",
     "vendor/GBADoom/source/d_client.c",
     "vendor/GBADoom/source/d_items.c",

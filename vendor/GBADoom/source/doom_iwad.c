@@ -1,12 +1,9 @@
-#pragma GCC optimize ("-O0")
 #include "doom_iwad.h"
+#include <stdint.h>
 
-//Uncomment which edition you want to compile
-#include "iwad/doom1.c"
-//#include "iwad/doomu.c"
-//#include "iwad/doom2.c"
-//#include "iwad/tnt.c"
-//#include "iwad/plutonia.c"
-//#include "iwad/sigil.c"
+extern const unsigned char doom_iwad_start[];
+extern const unsigned char doom_iwad_end[];
+extern const unsigned int doom_iwad_size;
 
-const unsigned int doom_iwad_len = sizeof(doom_iwad);
+const unsigned char *const doom_iwad = doom_iwad_start;
+const unsigned int doom_iwad_len = (unsigned int)(uintptr_t)&doom_iwad_size;

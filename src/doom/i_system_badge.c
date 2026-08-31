@@ -72,3 +72,29 @@ void I_Error(const char *error, ...)
     (void)error;
     while (1) {}
 }
+
+void exit(int status) { (void)status; while (1) {} }
+void *__aeabi_read_tp(void) { static int dummy = 0; return &dummy; }
+void putchar_(char c) { (void)c; }
+
+void *memchr(const void *s, int c, size_t n) {
+    const unsigned char *p = s;
+    while (n--) {
+        if (*p == (unsigned char)c) return (void *)p;
+        p++;
+    }
+    return NULL;
+}
+
+char *strcpy(char *dest, const char *src) {
+    char *ret = dest;
+    while ((*dest++ = *src++));
+    return ret;
+}
+
+char *strncpy(char *dest, const char *src, size_t n) {
+    size_t i;
+    for (i = 0; i < n && src[i] != '\0'; i++) dest[i] = src[i];
+    for ( ; i < n; i++) dest[i] = '\0';
+    return dest;
+}

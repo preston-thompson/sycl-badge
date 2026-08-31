@@ -9,6 +9,8 @@ const timer = @import("os/drivers/timer.zig");
 
 pub const panic = @import("os/system/panic.zig").panic;
 
+extern fn sycl_doom_main() c_int;
+
 pub const microzig_options: microzig.Options = .{
     .interrupts = interrupts.interrupts,
 };
@@ -24,10 +26,9 @@ pub fn main() !void {
     while (lcd.isBusy()) {}
 
     lcd.drawString(20, 28, "SYCL DOOM", lcd.RED, lcd.BLACK, 2);
+    while (lcd.isBusy()) {}
 
-    while (true) {
-        lcd.poll();
-    }
+    _ = sycl_doom_main();
 }
 
 export fn sycl_doom_micros() u64 {
