@@ -6,8 +6,19 @@ const gpio = @import("os/drivers/gpio.zig");
 const interrupts = @import("os/interrupts.zig");
 const lcd = @import("os/drivers/lcd.zig");
 const timer = @import("os/drivers/timer.zig");
+const std = @import("std");
 
 pub const panic = @import("os/system/panic.zig").panic;
+
+export fn sycl_doom_status(message_ptr: [*:0]const u8) void {
+    const message = std.mem.sliceTo(message_ptr, 0);
+    lcd.clearScreen(lcd.BLACK);
+    while (lcd.isBusy()) {}
+    
+    lcd.drawString(10, 20, "DOOM STATUS:", lcd.CYAN, lcd.BLACK, 1);
+    lcd.drawString(10, 40, message, lcd.WHITE, lcd.BLACK, 1);
+    while (lcd.isBusy()) {}
+}
 
 extern fn sycl_doom_main() c_int;
 

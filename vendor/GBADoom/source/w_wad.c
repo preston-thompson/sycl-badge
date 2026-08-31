@@ -130,21 +130,9 @@ static int PUREFUNC FindLumpByName(const char* name, const filelump_t** lump)
 
         fileinfo = (filelump_t*)&doom_iwad[header->infotableofs];
 
-        int_64_t nameint = 0;
-        strncpy((char*)&nameint, name, 8);
-
         for(int i = header->numlumps - 1; i >= 0; i--)
         {
-            //This is a bit naughty with alignment.
-            //For x86 doesn't matter because unaligned loads
-            //are fine.
-            //On ARM, unaligned loads are not fine but since it
-            //doesn't have a 64bit load, the compiler will generate
-            //32 bit loads. These vars are 32 aligned.
-
-            int_64_t nameint2 = *(int_64_t*)fileinfo[i].name;
-
-            if(nameint == nameint2)
+            if(!strncmp(name, fileinfo[i].name, 8))
             {
                 *lump = &fileinfo[i];
                 return i;
@@ -212,8 +200,12 @@ int PUREFUNC W_GetNumForName(const char* name)     // killough -- const added
 {
     int i = W_CheckNumForName (name);
 
-    if (i == -1)
-        I_Error("W_GetNumForName: %.8s not found", name);
+    if (i == -1) {
+        char message[40] = "Missing WAD lump: ";
+        strncpy(message + 18, name, 8);
+        message[26] = 0;
+        I_Error(message);
+    }
 
     return i;
 }

@@ -44,6 +44,7 @@
 #include "p_tick.h"
 
 #include "global_data.h"
+#include "badge_platform.h"
 
 //
 // Graphics.
@@ -100,14 +101,14 @@ static const texture_t* R_LoadTexture(int texture_num)
 
 
     maptex1 = W_CacheLumpName("TEXTURE1");
-    numtextures1 = *maptex1;
+    numtextures1 = LONG(*maptex1);
     directory1 = maptex1+1;
 
 
     if (W_CheckNumForName("TEXTURE2") != -1)
     {
         maptex2 = W_CacheLumpName("TEXTURE2");
-        numtextures2 = *maptex2;
+        numtextures2 = LONG(*maptex2);
         directory2 = maptex2+1;
     }
     else
@@ -122,12 +123,12 @@ static const texture_t* R_LoadTexture(int texture_num)
 
     if(texture_num < numtextures1)
     {
-        offset = directory1[texture_num];
+        offset = LONG(directory1[texture_num]);
     }
     else if(maptex2 && ((texture_num-numtextures1) < numtextures2) )
     {
         maptex = maptex2;
-        offset = directory2[texture_num-numtextures1];
+        offset = LONG(directory2[texture_num-numtextures1]);
     }
     else
     {
@@ -138,9 +139,9 @@ static const texture_t* R_LoadTexture(int texture_num)
 
     texture_t* texture = Z_Malloc(sizeof(const texture_t) + sizeof(const texpatch_t)*(mtexture->patchcount-1), PU_LEVEL, (void**)&textures[texture_num]);
 
-    texture->width = mtexture->width;
-    texture->height = mtexture->height;
-    texture->patchcount = mtexture->patchcount;
+    texture->width = SHORT(mtexture->width);
+    texture->height = SHORT(mtexture->height);
+    texture->patchcount = SHORT(mtexture->patchcount);
     texture->name = mtexture->name;
 
     texpatch_t* patch = texture->patches;
@@ -152,11 +153,11 @@ static const texture_t* R_LoadTexture(int texture_num)
 
     for (int j=0 ; j < texture->patchcount ; j++, mpatch++, patch++)
     {
-        patch->originx = mpatch->originx;
-        patch->originy = mpatch->originy;
+        patch->originx = SHORT(mpatch->originx);
+        patch->originy = SHORT(mpatch->originy);
 
         char pname[8];
-        strncpy(pname, (const char*)&pnames[mpatch->patch * 8], 8);
+        strncpy(pname, (const char*)&pnames[SHORT(mpatch->patch) * 8], 8);
 
         patch->patch = (const patch_t*)W_CacheLumpName(pname);
     }
@@ -246,7 +247,7 @@ static int R_GetTextureNumForName(const char* tex_name)
     }
 
     maptex1 = W_CacheLumpName("TEXTURE1");
-    numtextures1 = *maptex1;
+    numtextures1 = LONG(*maptex1);
     directory1 = maptex1+1;
 
 
@@ -273,7 +274,7 @@ static int R_GetTextureNumForName(const char* tex_name)
             directory = directory2;
         }
 
-        int offset = *directory;
+        int offset = LONG(*directory);
 
         const maptexture_t* mtexture = (const maptexture_t *) ( (const byte *)maptex + offset);
 
@@ -316,27 +317,37 @@ int R_LoadTextureByName(const char* tex_name)
 
 static void R_InitTextures()
 {
+    sycl_doom_status("texture get t1");
     const int* mtex1 = W_CacheLumpName("TEXTURE1");
-    int numtextures1 = *mtex1;
+    sycl_doom_status("texture read count");
+    int numtextures1 = LONG(*mtex1);
 
     int numtextures2 = 0;
 
+    sycl_doom_status("texture check t2");
     if (W_CheckNumForName("TEXTURE2") != -1)
     {
+        sycl_doom_status("texture get t2");
         const int* mtex2 = W_CacheLumpName("TEXTURE2");
-        numtextures2 = *mtex2;
+        numtextures2 = LONG(*mtex2);
     }
 
+    sycl_doom_status("texture alloc a");
     _g->numtextures = numtextures1 + numtextures2;
 
     textures = Z_Malloc(_g->numtextures*sizeof*textures, PU_STATIC, 0);
+    sycl_doom_status("texture clear a");
     memset(textures, 0, _g->numtextures*sizeof*textures);
 
+    sycl_doom_status("texture alloc b");
     textureheight = Z_Malloc(_g->numtextures*sizeof*textureheight, PU_STATIC, 0);
+    sycl_doom_status("texture clear b");
     memset(textureheight, 0, _g->numtextures*sizeof*textureheight);
 
+    sycl_doom_status("texture alloc c");
     texturetranslation = Z_Malloc((_g->numtextures+1)*sizeof*texturetranslation, PU_STATIC, 0);
 
+    sycl_doom_status("texture fill");
     for (int i=0 ; i<_g->numtextures ; i++)
         texturetranslation[i] = i;
 }
@@ -395,12 +406,16 @@ void R_InitColormaps (void)
 void R_InitData(void)
 {
   lprintf(LO_INFO, "Textures");
+  sycl_doom_status("render textures");
   R_InitTextures();
   lprintf(LO_INFO, "Flats");
+  sycl_doom_status("render flats");
   R_InitFlats();
   lprintf(LO_INFO, "Sprites");
+  sycl_doom_status("render sprites");
   R_InitSpriteLumps();
   lprintf(LO_INFO, "Colormaps");
+  sycl_doom_status("render colormaps");
   R_InitColormaps();                    // killough 3/20/98
 }
 

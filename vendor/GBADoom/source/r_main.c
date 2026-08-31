@@ -43,6 +43,7 @@
 #include "w_wad.h"
 #include "r_main.h"
 #include "r_things.h"
+#include "badge_platform.h"
 #include "r_plane.h"
 #include "r_draw.h"
 #include "m_bbox.h"
@@ -66,12 +67,16 @@
 void R_Init (void)
 {
   lprintf(LO_INFO, "R_LoadTrigTables");
+  sycl_doom_status("render trig");
   R_LoadTrigTables();
   lprintf(LO_INFO, "R_InitData");
+  sycl_doom_status("render data");
   R_InitData();
   lprintf(LO_INFO, "R_InitPlanes");
+  sycl_doom_status("render planes");
   R_InitPlanes();
   lprintf(LO_INFO, "R_InitBuffer");
+  sycl_doom_status("render buffer");
   R_InitBuffer();
 }
 

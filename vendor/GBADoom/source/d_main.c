@@ -41,6 +41,7 @@
 #include "doomdef.h"
 #include "doomtype.h"
 #include "doomstat.h"
+#include "badge_platform.h"
 #include "d_net.h"
 #include "dstrings.h"
 #include "sounds.h"
@@ -685,33 +686,41 @@ static void D_DoomMainSetup(void)
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"W_Init: Init WADfiles.");
+    sycl_doom_status("wad init");
     W_Init(); // CPhipps - handling of wadfiles init changed
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"M_Init: Init misc info.");
+    sycl_doom_status("misc init");
     M_Init();
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"R_Init: DOOM refresh daemon.");
+    sycl_doom_status("render init");
     R_Init();
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"P_Init: Init Playloop state.");
+    sycl_doom_status("play init");
     P_Init();
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"S_Init: Setting up sound.");
+    sycl_doom_status("sound init");
     S_Init(_g->snd_SfxVolume /* *8 */, _g->snd_MusicVolume /* *8*/ );
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"HU_Init: Setting up HUD.");
+    sycl_doom_status("hud init");
     HU_Init();
 
     //jff 9/3/98 use logical output routine
     lprintf(LO_INFO,"ST_Init: Init status bar.");
+    sycl_doom_status("status init");
     ST_Init();
 
     lprintf(LO_INFO,"G_LoadSettings: Loading settings.");
+    sycl_doom_status("load settings");
     G_LoadSettings();
 
     _g->idmusnum = -1; //jff 3/17/98 insure idmus number is blank
@@ -720,6 +729,7 @@ static void D_DoomMainSetup(void)
 
     _g->highDetail = false;
 
+    sycl_doom_status("graphics init");
     I_InitGraphics();
 
     if (timedemo)
@@ -731,6 +741,7 @@ static void D_DoomMainSetup(void)
     }
     else
     {
+        sycl_doom_status("start title");
         D_StartTitle();                 // start up intro loop
     }
 }
