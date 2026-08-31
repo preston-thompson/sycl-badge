@@ -43,7 +43,6 @@
 #endif
 
 #ifndef GBA
-    #include <time.h>
 #endif
 
 #include "doomstat.h"
@@ -1208,14 +1207,6 @@ static void R_DrawPlayerSprites(void)
 // Rewritten by Lee Killough to avoid using unnecessary
 // linked lists, and to use faster sorting algorithm.
 //
-static int compare (const void* l, const void* r)
-{
-    const vissprite_t* vl = *(const vissprite_t**)l;
-    const vissprite_t* vr = *(const vissprite_t**)r;
-
-    return vr->scale - vl->scale;
-}
-
 static void R_SortVisSprites (void)
 {
     int i = num_vissprite;
@@ -1225,7 +1216,15 @@ static void R_SortVisSprites (void)
         while (--i>=0)
             vissprite_ptrs[i] = _g->vissprites+i;
 
-        qsort(vissprite_ptrs, num_vissprite, sizeof (vissprite_t*), compare);
+        for (int j = 1; j < num_vissprite; j++) {
+            vissprite_t *tmp = vissprite_ptrs[j];
+            int k = j;
+            while (k > 0 && vissprite_ptrs[k - 1]->scale < tmp->scale) {
+                vissprite_ptrs[k] = vissprite_ptrs[k - 1];
+                k--;
+            }
+            vissprite_ptrs[k] = tmp;
+        }
     }
 }
 
@@ -3309,7 +3308,7 @@ int I_GetTime(void)
 {
     int thistimereply;
 
-#ifndef GBA
+#if !defined(GBA) && !defined(SYCL_BADGE)
 
     clock_t now = clock();
 

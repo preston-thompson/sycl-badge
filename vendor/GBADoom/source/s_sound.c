@@ -101,9 +101,9 @@ void S_Init(int sfxVolume, int musicVolume)
         // Allocating the internal channels for mixing
         // (the maximum numer of sounds rendered
         // simultaneously) within zone memory.
-        // CPhipps - calloc
+        // CPhipps - calloc replaced with Z_Calloc
         _g->channels =
-                (channel_t *) calloc(numChannels,sizeof(channel_t));
+                (channel_t *) Z_Calloc(numChannels, sizeof(channel_t), PU_STATIC, 0);
     }
 
     // CPhipps - music init reformatted

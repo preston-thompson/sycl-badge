@@ -1,8 +1,8 @@
-const std = @import("std");
 const microzig = @import("microzig");
 const board = microzig.board;
 
 const init = @import("os/system/init.zig");
+const gpio = @import("os/drivers/gpio.zig");
 const interrupts = @import("os/interrupts.zig");
 const lcd = @import("os/drivers/lcd.zig");
 const timer = @import("os/drivers/timer.zig");
@@ -30,6 +30,24 @@ pub fn main() !void {
     }
 }
 
-comptime {
-    _ = std;
+export fn sycl_doom_micros() u64 {
+    return timer.micros();
+}
+
+export fn sycl_doom_present(buffer: [*]const u16) void {
+    lcd.writeBuffer(0, 0, lcd.width, lcd.height, buffer[0 .. lcd.width * lcd.height]);
+}
+
+export fn sycl_doom_buttons() u32 {
+    var buttons: u32 = 0;
+    if (gpio.isButtonPressed(board.button_start)) buttons |= 1 << 0;
+    if (gpio.isButtonPressed(board.button_select)) buttons |= 1 << 1;
+    if (gpio.isButtonPressed(board.button_a)) buttons |= 1 << 2;
+    if (gpio.isButtonPressed(board.button_b)) buttons |= 1 << 3;
+    if (gpio.isButtonPressed(board.joystick_up)) buttons |= 1 << 4;
+    if (gpio.isButtonPressed(board.joystick_down)) buttons |= 1 << 5;
+    if (gpio.isButtonPressed(board.joystick_left)) buttons |= 1 << 6;
+    if (gpio.isButtonPressed(board.joystick_right)) buttons |= 1 << 7;
+    if (gpio.isButtonPressed(board.joystick_click)) buttons |= 1 << 8;
+    return buttons;
 }

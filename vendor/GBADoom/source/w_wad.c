@@ -40,7 +40,6 @@
 #include <unistd.h>
 #endif
 
-#include <fcntl.h>
 
 #include "doomstat.h"
 #include "d_net.h"

@@ -234,7 +234,11 @@ static int R_GetTextureNumForName(const char* tex_name)
     strncpy(tex_name_upper, tex_name, 8);
     tex_name_upper[8] = 0; //Ensure null terminated.
 
-    strupr(tex_name_upper);
+    for (int i = 0; tex_name_upper[i]; i++) {
+        if (tex_name_upper[i] >= 'a' && tex_name_upper[i] <= 'z') {
+            tex_name_upper[i] -= ('a' - 'A');
+        }
+    }
 
     if(_g->tex_lookup_last_name && (!strncmp(_g->tex_lookup_last_name, tex_name_upper, 8)))
     {

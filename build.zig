@@ -91,6 +91,20 @@ pub fn build(b: *Build) void {
         },
         .stack = .{ .symbol_name = "__stack" },
     });
+    const foundation_dep = b.dependency("foundation_libc", .{
+        .target = b.resolveTargetQuery(badge_v2_target.zig_target),
+        .optimize = .ReleaseSmall,
+    });
+    doom.artifact.linkLibrary(foundation_dep.artifact("foundation"));
+
+    doom.artifact.addIncludePath(b.path("vendor/GBADoom/include"));
+    doom.artifact.addIncludePath(b.path("src/doom"));
+    doom.artifact.addIncludePath(b.path("vendor/printf"));
+    doom.artifact.addCSourceFiles(.{
+        .root = b.path("."),
+        .files = &doom_c_sources,
+        .flags = &doom_c_flags,
+    });
     mb.install_firmware(doom, .{ .format = .elf });
     mb.install_firmware(doom, .{ .format = .{ .uf2 = .{ .family_id = .RP2350_ARM_S } } });
 
@@ -209,6 +223,89 @@ pub fn build(b: *Build) void {
 
     font_export_step.dependOn(&font_export_run.step);
 }
+
+const doom_c_flags = [_][]const u8{
+    "-std=gnu11",
+    "-Wno-expansion-to-defined",
+    "-Wno-builtin-macro-redefined",
+    "-D__DATE__=\"unknown\"",
+    "-DSYCL_BADGE",
+    "-ffreestanding",
+    "-fno-builtin",
+    "-Wno-unused-function",
+    "-Wno-unused-variable",
+    "-Wno-unused-but-set-variable",
+    "-Wno-incompatible-pointer-types-discards-qualifiers",
+    "-Wno-deprecated-non-prototype",
+    "-DPRINTF_SUPPORT_DECIMAL_SPECIFIERS=0",
+    "-DPRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS=0",
+    "-DPRINTF_ALIAS_STANDARD_FUNCTION_NAMES=1",
+};
+
+const doom_c_sources = [_][]const u8{
+    "src/doom/i_audio_badge.c",
+    "vendor/printf/printf.c",
+    "src/doom/i_system_badge.c",
+    "src/doom/i_video_badge.c",
+    "vendor/GBADoom/source/am_map.c",
+    "vendor/GBADoom/source/d_client.c",
+    "vendor/GBADoom/source/d_items.c",
+    "vendor/GBADoom/source/d_main.c",
+    "vendor/GBADoom/source/doom_iwad.c",
+    "vendor/GBADoom/source/f_finale.c",
+    "vendor/GBADoom/source/f_wipe.c",
+    "vendor/GBADoom/source/g_game.c",
+    "vendor/GBADoom/source/global_data.c",
+    "vendor/GBADoom/source/hu_lib.c",
+    "vendor/GBADoom/source/hu_stuff.c",
+    "vendor/GBADoom/source/i_system.c",
+    "vendor/GBADoom/source/i_video.c",
+    "vendor/GBADoom/source/info.c",
+    "vendor/GBADoom/source/lprintf.c",
+    "vendor/GBADoom/source/m_bbox.c",
+    "vendor/GBADoom/source/m_cheat.c",
+    "vendor/GBADoom/source/m_menu.c",
+    "vendor/GBADoom/source/m_random.c",
+    "vendor/GBADoom/source/m_recip.c",
+    "vendor/GBADoom/source/p_ceilng.c",
+    "vendor/GBADoom/source/p_doors.c",
+    "vendor/GBADoom/source/p_enemy.c",
+    "vendor/GBADoom/source/p_floor.c",
+    "vendor/GBADoom/source/p_genlin.c",
+    "vendor/GBADoom/source/p_inter.c",
+    "vendor/GBADoom/source/p_lights.c",
+    "vendor/GBADoom/source/p_map.c",
+    "vendor/GBADoom/source/p_maputl.c",
+    "vendor/GBADoom/source/p_mobj.c",
+    "vendor/GBADoom/source/p_plats.c",
+    "vendor/GBADoom/source/p_pspr.c",
+    "vendor/GBADoom/source/p_setup.c",
+    "vendor/GBADoom/source/p_sight.c",
+    "vendor/GBADoom/source/p_spec.c",
+    "vendor/GBADoom/source/p_switch.c",
+    "vendor/GBADoom/source/p_telept.c",
+    "vendor/GBADoom/source/p_tick.c",
+    "vendor/GBADoom/source/p_user.c",
+    "vendor/GBADoom/source/r_data.c",
+    "vendor/GBADoom/source/r_draw.c",
+    "vendor/GBADoom/source/r_hotpath.iwram.c",
+    "vendor/GBADoom/source/r_main.c",
+    "vendor/GBADoom/source/r_patch.c",
+    "vendor/GBADoom/source/r_plane.c",
+    "vendor/GBADoom/source/r_things.c",
+    "vendor/GBADoom/source/s_sound.c",
+    "vendor/GBADoom/source/sounds.c",
+    "vendor/GBADoom/source/st_gfx.c",
+    "vendor/GBADoom/source/st_lib.c",
+    "vendor/GBADoom/source/st_stuff.c",
+    "vendor/GBADoom/source/tables.c",
+    "vendor/GBADoom/source/v_video.c",
+    "vendor/GBADoom/source/version.c",
+    "vendor/GBADoom/source/w_wad.c",
+    "vendor/GBADoom/source/wi_stuff.c",
+    "vendor/GBADoom/source/z_bmalloc.c",
+    "vendor/GBADoom/source/z_zone.c",
+};
 
 pub const Cart = struct {
     fw: *MicroBuild.Firmware,

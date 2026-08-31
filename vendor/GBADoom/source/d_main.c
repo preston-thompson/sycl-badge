@@ -37,9 +37,6 @@
 
 
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 #include "doomdef.h"
 #include "doomtype.h"
@@ -84,8 +81,8 @@ static void D_UpdateFPS(void);
 
 
 //jff 1/22/98 parms for disabling music and sound
-const boolean nosfxparm = false;
-const boolean nomusicparm = false;
+const boolean nosfxparm = true;
+const boolean nomusicparm = true;
 
 const skill_t startskill = sk_medium;
 const int startepisode = 1;

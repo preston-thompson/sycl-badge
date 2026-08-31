@@ -72,17 +72,9 @@ void Z_Init (void)
 {
     memblock_t*	block;
 
-    unsigned int heapSize = maxHeapSize;
-
-    //We can now alloc all of the rest fo the memory.
-    do
-    {
-        mainzone = malloc(heapSize);
-        heapSize -= 4;
-
-    } while(mainzone == NULL);
-
-    heapSize += 4;
+    static byte doom_heap[256 * 1024];
+    unsigned int heapSize = sizeof(doom_heap);
+    mainzone = (memzone_t *)doom_heap;
 
     lprintf(LO_INFO,"Z_Init: Heapsize is %d bytes.", heapSize);
 

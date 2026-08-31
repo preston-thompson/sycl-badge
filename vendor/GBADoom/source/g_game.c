@@ -863,7 +863,7 @@ void G_UpdateSaveGameStrings()
             {
                 strcpy(_g->savegamestrings[i], "MAP ");
 
-                itoa(saveslots[i].gamemap, &_g->savegamestrings[i][4], 10);
+                sprintf(&_g->savegamestrings[i][4], "%d", saveslots[i].gamemap);
             }
             else
             {
