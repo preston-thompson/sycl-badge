@@ -45,7 +45,7 @@
 // proff 08/18/98: Changed for high-res
 #define ST_HEIGHT 32
 #define ST_WIDTH  320
-#define ST_Y      (160 - ST_HEIGHT)
+#define ST_Y      (SCREENHEIGHT - ST_HEIGHT)
 #define ST_SCALED_HEIGHT ST_HEIGHT
 #define ST_SCALED_WIDTH  SCREENWIDTH
 #define ST_SCALED_Y      (SCREENHEIGHT - ST_SCALED_HEIGHT)
@@ -98,7 +98,7 @@
 #define ST_DEADFACE             (ST_GODFACE+1)
 
 // proff 08/18/98: Changed for high-res
-#define ST_FACESX               (ST_X+104)
+#define ST_FACESX               (ST_X+104*SCREENWIDTH/240)
 #define ST_FACESY               (ST_Y)
 
 #define ST_EVILGRINCOUNT        (2*TICRATE)
@@ -123,7 +123,7 @@
 // AMMO number pos.
 #define ST_AMMOWIDTH            3
 // proff 08/18/98: Changed for high-res
-#define ST_AMMOX                (ST_X+32)
+#define ST_AMMOX                (ST_X+32*SCREENWIDTH/240)
 #define ST_AMMOY                (ST_Y+6)
 //#define ST_AMMOX                44
 //#define ST_AMMOY                171
@@ -131,15 +131,15 @@
 // HEALTH number pos.
 #define ST_HEALTHWIDTH          3
 // proff 08/18/98: Changed for high-res
-#define ST_HEALTHX              (ST_X+66)
+#define ST_HEALTHX              (ST_X+66*SCREENWIDTH/240)
 #define ST_HEALTHY              (ST_Y+6)
 
 
 // Weapon pos.
 // proff 08/18/98: Changed for high-res
-#define ST_ARMSX                (ST_X+82)
+#define ST_ARMSX                (ST_X+82*SCREENWIDTH/240)
 #define ST_ARMSY                (ST_Y+4)
-#define ST_ARMSBGX              (ST_X+104)
+#define ST_ARMSBGX              (ST_X+104*SCREENWIDTH/240)
 #define ST_ARMSBGY              (ST_Y)
 
 #define ST_ARMSXSPACE           8
@@ -147,7 +147,7 @@
 
 // Frags pos.
 // proff 08/18/98: Changed for high-res
-#define ST_FRAGSX               (ST_X+138)
+#define ST_FRAGSX               (ST_X+138*SCREENWIDTH/240)
 #define ST_FRAGSY               (ST_Y+3)
 //#define ST_FRAGSX               138
 //#define ST_FRAGSY               171
@@ -156,7 +156,7 @@
 // ARMOR number pos.
 #define ST_ARMORWIDTH           3
 // proff 08/18/98: Changed for high-res
-#define ST_ARMORX               (ST_X+166)
+#define ST_ARMORX               (ST_X+166*SCREENWIDTH/240)
 #define ST_ARMORY               (ST_Y+6)
 
 
@@ -164,17 +164,17 @@
 #define ST_KEY0WIDTH            8
 #define ST_KEY0HEIGHT           5
 // proff 08/18/98: Changed for high-res
-#define ST_KEY0X                (ST_X+178)
+#define ST_KEY0X                (ST_X+178*SCREENWIDTH/240)
 #define ST_KEY0Y                (ST_Y+3)
 
 #define ST_KEY1WIDTH            ST_KEY0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_KEY1X                (ST_X+178)
+#define ST_KEY1X                (ST_X+178*SCREENWIDTH/240)
 #define ST_KEY1Y                (ST_Y+13)
 
 #define ST_KEY2WIDTH            ST_KEY0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_KEY2X                (ST_X+178)
+#define ST_KEY2X                (ST_X+178*SCREENWIDTH/240)
 #define ST_KEY2Y                (ST_Y+23)
 
 
@@ -182,22 +182,22 @@
 #define ST_AMMO0WIDTH           3
 #define ST_AMMO0HEIGHT          6
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO0X               (ST_X+220)
+#define ST_AMMO0X               (ST_X+220*SCREENWIDTH/240)
 #define ST_AMMO0Y               (ST_Y+5)
 
 #define ST_AMMO1WIDTH           ST_AMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO1X               (ST_X+220)
+#define ST_AMMO1X               (ST_X+220*SCREENWIDTH/240)
 #define ST_AMMO1Y               (ST_Y+11)
 
 #define ST_AMMO2WIDTH           ST_AMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO2X               (ST_X+220)
+#define ST_AMMO2X               (ST_X+220*SCREENWIDTH/240)
 #define ST_AMMO2Y               (ST_Y+23)
 
 #define ST_AMMO3WIDTH           ST_AMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_AMMO3X               (ST_X+220)
+#define ST_AMMO3X               (ST_X+220*SCREENWIDTH/240)
 #define ST_AMMO3Y               (ST_Y+17)
 
 
@@ -206,22 +206,22 @@
 #define ST_MAXAMMO0WIDTH        3
 #define ST_MAXAMMO0HEIGHT       5
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO0X            (ST_X+238)
+#define ST_MAXAMMO0X            (ST_X+238*SCREENWIDTH/240)
 #define ST_MAXAMMO0Y            (ST_Y+5)
 
 #define ST_MAXAMMO1WIDTH        ST_MAXAMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO1X            (ST_X+238)
+#define ST_MAXAMMO1X            (ST_X+238*SCREENWIDTH/240)
 #define ST_MAXAMMO1Y            (ST_Y+11)
 
 #define ST_MAXAMMO2WIDTH        ST_MAXAMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO2X            (ST_X+238)
+#define ST_MAXAMMO2X            (ST_X+238*SCREENWIDTH/240)
 #define ST_MAXAMMO2Y            (ST_Y+23)
 
 #define ST_MAXAMMO3WIDTH        ST_MAXAMMO0WIDTH
 // proff 08/18/98: Changed for high-res
-#define ST_MAXAMMO3X            (ST_X+238)
+#define ST_MAXAMMO3X            (ST_X+238*SCREENWIDTH/240)
 #define ST_MAXAMMO3Y            (ST_Y+17)
 
 

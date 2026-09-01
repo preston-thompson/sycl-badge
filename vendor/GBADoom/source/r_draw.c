@@ -94,9 +94,9 @@ void R_InitBuffer()
 
     BlockCopy((void*)distscale_vram, distscale, sizeof(distscale));
 
-    for(int i = 0; i < 120; i++)
+    for(int i = 0; i < MAX_SCREENWIDTH; i++)
         negonearray[i] = -1;
 
-    for(int i = 0; i < 120; i++)
-        screenheightarray[i] = 128;
+    for(int i = 0; i < MAX_SCREENWIDTH; i++)
+        screenheightarray[i] = (MAX_SCREENHEIGHT - 32);
 }

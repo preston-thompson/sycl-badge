@@ -64,7 +64,7 @@
 
 #include "gba_functions.h"
 
-const fixed_t iprojection = 1092; //( (1 << FRACUNIT) / (SCREENWIDTH / 2))
+const fixed_t iprojection = 819; //( (1 << FRACUNIT) / (SCREENWIDTH / 2))
 
 
 //

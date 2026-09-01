@@ -42,7 +42,9 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #ifndef GBA
+    
 #endif
 
 #include "doomstat.h"
@@ -77,62 +79,27 @@
 //*****************************************
 
 #ifndef GBA
-static byte vram1_spare[2560];
-static byte vram2_spare[2560];
-static byte vram3_spare[1024];
-#else
-    #define vram1_spare ((byte*)0x6000000+0x9600)
-    #define vram2_spare ((byte*)0x600A000+0x9600)
-    #define vram3_spare ((byte*)0x7000000)
-#endif
-
 //Stuff alloc'd in OAM memory.
-
-//512 bytes.
-static unsigned int* columnCacheEntries = (unsigned int*)&vram3_spare[0];
-
-//240 bytes.
-short* floorclip = (short*)&vram3_spare[512];
-
-//240 bytes.
-short* ceilingclip = (short*)&vram3_spare[512+240];
-
-//992 bytes used. 32 byes left.
-
-
+unsigned int columnCacheEntries[128];
+short floorclip[MAX_SCREENWIDTH];
+short ceilingclip[MAX_SCREENWIDTH];
 
 //Stuff alloc'd in VRAM1 memory.
-
-//580 bytes
-const fixed_t* yslope_vram = (const fixed_t*)&vram1_spare[0];
-
-//480 bytes
-const fixed_t* distscale_vram = (const fixed_t*)&vram1_spare[580];
-
-//484 bytes.
-const angle_t* xtoviewangle_vram = (const angle_t*)&vram1_spare[580+480];
-
-//240 Bytes.
-short* wipe_y_lookup = (short*)&vram1_spare[580+480+484];
-
-//384 Bytes
-vissprite_t** vissprite_ptrs = (vissprite_t**)&vram1_spare[580+480+484+240];
-
-//2168 bytes used. 392 bytes left.
-
+fixed_t yslope_vram[MAX_SCREENHEIGHT];
+fixed_t distscale_vram[MAX_SCREENWIDTH];
+angle_t xtoviewangle_vram[MAX_SCREENWIDTH+1];
+short wipe_y_lookup[MAX_SCREENWIDTH];
+vissprite_t* vissprite_ptrs[128]; // MAXVISSPRITES is usually 128
 
 //Stuff alloc'd in VRAM2 memory.
-
-//240 bytes
-short* screenheightarray = (short*)&vram2_spare[0];
-
-//240 bytes
-short* negonearray = (short*)&vram2_spare[240];
-
+short screenheightarray[MAX_SCREENWIDTH];
+short negonearray[MAX_SCREENWIDTH];
 
 #define yslope yslope_vram
 #define distscale distscale_vram
 #define xtoviewangle xtoviewangle_vram
+
+#endif // !GBA
 
 //*****************************************
 //Column cache stuff.
@@ -269,8 +236,8 @@ static const fixed_t projectiony = ((SCREENHEIGHT * (SCREENWIDTH/2) * 320) / 200
 static const fixed_t pspritescale = FRACUNIT*SCREENWIDTH/320;
 static const fixed_t pspriteiscale = FRACUNIT*320/SCREENWIDTH;
 
-static const fixed_t pspriteyscale = (SCREENHEIGHT << FRACBITS) / 200;
-static const fixed_t pspriteyiscale = ((UINT_MAX) / ((SCREENHEIGHT << FRACBITS) / 200));
+static const fixed_t pspriteyscale = ((SCREENHEIGHT-ST_SCALED_HEIGHT) << FRACBITS) / 200;
+static const fixed_t pspriteyiscale = ((UINT_MAX) / (((SCREENHEIGHT-ST_SCALED_HEIGHT) << FRACBITS) / 200));
 
 
 static const angle_t clipangle = 537395200; //xtoviewangle[0];
@@ -535,17 +502,9 @@ static const lighttable_t* R_LoadColorMap(int lightlevel)
 #define COLEXTRABITS 9
 #define COLBITS (FRACBITS + COLEXTRABITS)
 
-inline static void R_DrawColumnPixel(unsigned short* dest, const byte* source, const byte* colormap, unsigned int frac)
+inline static void R_DrawColumnPixel(byte* dest, const byte* source, const byte* colormap, unsigned int frac)
 {
-    pixel* d = (pixel*)dest;
-
-#ifdef GBA
-    *d = colormap[source[frac>>COLBITS]];
-#else
-    unsigned int color = colormap[source[frac>>COLBITS]];
-
-    *d = (color | (color << 8));
-#endif
+    *dest = colormap[source[frac>>COLBITS]];
 }
 
 static void R_DrawColumn (const draw_column_vars_t *dcvars)
@@ -559,7 +518,7 @@ static void R_DrawColumn (const draw_column_vars_t *dcvars)
     const byte *source = dcvars->source;
     const byte *colormap = dcvars->colormap;
 
-    unsigned short* dest = drawvars.byte_topleft + ScreenYToOffset(dcvars->yl) + dcvars->x;
+    byte* dest = (byte*)drawvars.byte_topleft + (dcvars->yl * SCREENPITCH * 2) + dcvars->x;
 
     const unsigned int		fracstep = (dcvars->iscale << COLEXTRABITS);
     unsigned int frac = (dcvars->texturemid + (dcvars->yl - centery)*dcvars->iscale) << COLEXTRABITS;
@@ -572,45 +531,45 @@ static void R_DrawColumn (const draw_column_vars_t *dcvars)
 
     while(l--)
     {
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
 
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
 
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
 
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
     }
 
     unsigned int r = (count & 15);
 
     switch(r)
     {
-        case 15:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 14:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 13:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 12:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 11:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 10:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 9:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 8:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 7:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 6:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 5:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 4:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 3:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
-        case 2:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENWIDTH; frac+=fracstep;
+        case 15:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 14:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 13:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 12:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 11:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 10:    R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 9:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 8:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 7:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 6:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 5:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 4:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 3:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
+        case 2:     R_DrawColumnPixel(dest, source, colormap, frac); dest+=SCREENPITCH * 2; frac+=fracstep;
         case 1:     R_DrawColumnPixel(dest, source, colormap, frac);
     }
 }
@@ -626,7 +585,7 @@ static void R_DrawColumnHiRes(const draw_column_vars_t *dcvars)
     const byte *source = dcvars->source;
     const byte *colormap = dcvars->colormap;
 
-    volatile unsigned short* dest = drawvars.byte_topleft + ScreenYToOffset(dcvars->yl) + dcvars->x;
+    byte* dest = (byte*)drawvars.byte_topleft + (dcvars->yl * SCREENPITCH * 2) + dcvars->x;
 
     const unsigned int		fracstep = (dcvars->iscale << COLEXTRABITS);
     unsigned int frac = (dcvars->texturemid + (dcvars->yl - centery)*dcvars->iscale) << COLEXTRABITS;
@@ -651,12 +610,13 @@ static void R_DrawColumnHiRes(const draw_column_vars_t *dcvars)
 
     while(count--)
     {
-        unsigned int old = *dest;
         unsigned int color = colormap[source[frac>>COLBITS]];
 
-        *dest = ((old & mask) | (color << shift));
+        (void)mask;
+        (void)shift;
+        *dest = color;
 
-        dest+=SCREENWIDTH;
+        dest+=SCREENPITCH * 2;
         frac+=fracstep;
     }
 }
@@ -704,13 +664,13 @@ static void R_DrawFuzzColumn (const draw_column_vars_t *dcvars)
 
     const byte* colormap = &fullcolormap[6*256];
 
-    unsigned short* dest = drawvars.byte_topleft + ScreenYToOffset(dc_yl) + dcvars->x;
+    byte* dest = (byte*)drawvars.byte_topleft + (dc_yl * SCREENPITCH * 2) + dcvars->x;
 
     unsigned int fuzzpos = _g->fuzzpos;
 
     do
     {        
-        R_DrawColumnPixel(dest, (const byte*)&dest[fuzzoffset[fuzzpos]], colormap, 0); dest += SCREENWIDTH;  fuzzpos++;
+        R_DrawColumnPixel(dest, (const byte*)&dest[fuzzoffset[fuzzpos]], colormap, 0); dest += SCREENPITCH * 2;  fuzzpos++;
 
         if(fuzzpos >= 50)
             fuzzpos = 0;
@@ -753,7 +713,7 @@ static void R_DrawMaskedColumn(R_DrawColumn_f colfunc, draw_column_vars_t *dcvar
             yl = cclip_x + 1;
 
         // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-        if (yh < viewheight && yl <= yh)
+        if (yh < SCREENHEIGHT && yl <= yh)
         {
             dcvars->source =  (const byte*)column + 3;
 
@@ -1275,18 +1235,9 @@ static void R_DrawMasked(void)
 #pragma GCC push_options
 #pragma GCC optimize ("Ofast")
 
-inline static void R_DrawSpanPixel(unsigned short* dest, const byte* source, const byte* colormap, unsigned int position)
+inline static void R_DrawSpanPixel(byte* dest, const byte* source, const byte* colormap, unsigned int position)
 {
-
- pixel* d = (pixel*)dest;
-
-#ifdef GBA
-    *d = colormap[source[((position >> 4) & 0x0fc0) | (position >> 26)]];
-#else
-    unsigned int color = colormap[source[((position >> 4) & 0x0fc0) | (position >> 26)]];
-
-    *d = (color | (color << 8));
-#endif
+    *dest = colormap[source[((position >> 4) & 0x0fc0) | (position >> 26)]];
 }
 
 static void R_DrawSpan(unsigned int y, unsigned int x1, unsigned int x2, const draw_span_vars_t *dsvars)
@@ -1296,7 +1247,7 @@ static void R_DrawSpan(unsigned int y, unsigned int x1, unsigned int x2, const d
     const byte *source = dsvars->source;
     const byte *colormap = dsvars->colormap;
 
-    unsigned short* dest = drawvars.byte_topleft + ScreenYToOffset(y) + x1;
+    byte* dest = (byte*)drawvars.byte_topleft + (y * SCREENPITCH * 2) + x1;
 
     const unsigned int step = dsvars->step;
     unsigned int position = dsvars->position;
@@ -2952,32 +2903,18 @@ void V_DrawPatchNoScale(int x, int y, const patch_t* patch)
     {
         const column_t* column = (const column_t*)((const byte*)patch + patch->columnofs[col]);
 
-        unsigned int odd_addr = (size_t)desttop & 1;
-
-        byte* desttop_even = (byte*)((size_t)desttop & ~1);
-
         // step through the posts in a column
         while (column->topdelta != 0xff)
         {
             const byte* source = (const byte*)column + 3;
-            byte* dest = desttop_even + (ScreenYToOffset(column->topdelta) << 1);
+            byte* dest = desttop + (ScreenYToOffset(column->topdelta) << 1);
 
             unsigned int count = column->length;
 
             while (count--)
             {
-                unsigned int color = *source++;
-                volatile unsigned short* dest16 = (volatile unsigned short*)dest;
-
-                unsigned int old = *dest16;
-
-                //The GBA must write in 16bits.
-                if(odd_addr)
-                    *dest16 = (old & 0xff) | (color << 8);
-                else
-                    *dest16 = ((color & 0xff) | (old & 0xff00));
-
-                dest += 240;
+                *dest = *source++;
+                dest += (SCREENPITCH * 2);
             }
 
             column = (const column_t*)((const byte*)column + column->length + 4);

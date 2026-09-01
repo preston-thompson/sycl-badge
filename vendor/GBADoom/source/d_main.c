@@ -170,7 +170,7 @@ static void D_Display (void)
         return;
 
     // save the current screen if about to wipe
-    wipe = (_g->gamestate != _g->wipegamestate);
+    wipe = false;
 
     if (wipe)
         wipe_StartScreen();
