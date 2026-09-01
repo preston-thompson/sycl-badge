@@ -42,8 +42,11 @@ pub fn main() !void {
     _ = sycl_doom_main();
 }
 
-export fn sycl_doom_micros() u64 {
-    return timer.micros();
+export fn sycl_doom_tics() u32 {
+    const micros_64 = timer.micros();
+    const micros_32 = @as(u32, @truncate(micros_64));
+    const denom: u32 = 28571;
+    return micros_32 / denom;
 }
 
 export fn sycl_doom_present(buffer: [*]const u16) void {
