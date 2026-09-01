@@ -1411,7 +1411,7 @@ void P_RadiusAttack(mobj_t* spot,mobj_t* source,int damage)
 
   fixed_t dist;
 
-  dist = (damage+MAXRADIUS)<<FRACBITS;
+  dist = ((fixed_t)damage<<FRACBITS) + MAXRADIUS;
   yh = (spot->y + dist - _g->bmaporgy)>>MAPBLOCKSHIFT;
   yl = (spot->y - dist - _g->bmaporgy)>>MAPBLOCKSHIFT;
   xh = (spot->x + dist - _g->bmaporgx)>>MAPBLOCKSHIFT;
@@ -1495,9 +1495,9 @@ boolean PIT_ChangeSector (mobj_t* thing)
 
     /* killough 8/10/98: remove dependence on order of evaluation */
     t = P_Random();
-    mo->momx = (t - P_Random ())<<12;
+    mo->momx = ((fixed_t)((unsigned int)(t - P_Random ())<<12));
     t = P_Random();
-    mo->momy = (t - P_Random ())<<12;
+    mo->momy = ((fixed_t)((unsigned int)(t - P_Random ())<<12));
   }
 
   // keep checking (crush other things)

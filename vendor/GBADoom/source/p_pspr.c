@@ -80,8 +80,8 @@ static void P_SetPsprite(player_t *player, int position, statenum_t stnum)
       if (state->misc1)
         {
           // coordinate set
-          psp->sx = state->misc1 << FRACBITS;
-          psp->sy = state->misc2 << FRACBITS;
+          psp->sx = (fixed_t)((unsigned int)(short)state->misc1 << FRACBITS);
+          psp->sy = (fixed_t)((unsigned int)(short)state->misc2 << FRACBITS);
         }
 
       // Call action routine.
@@ -632,7 +632,7 @@ void A_Punch(player_t *player, pspdef_t *psp)
 
   // killough 5/5/98: remove dependence on order of evaluation:
   t = P_Random();
-  angle += (t - P_Random())<<18;
+  angle += ((fixed_t)((unsigned int)(t - P_Random())<<18));
 
   /* killough 8/2/98: make autoaiming prefer enemies */
   if (
@@ -663,7 +663,7 @@ void A_Saw(player_t *player, pspdef_t *psp)
   angle_t angle = player->mo->angle;
   // killough 5/5/98: remove dependence on order of evaluation:
   int t = P_Random();
-  angle += (t - P_Random())<<18;
+  angle += ((fixed_t)((unsigned int)(t - P_Random())<<18));
 
   /* Use meleerange + 1 so that the puff doesn't skip the flash
    * killough 8/2/98: make autoaiming prefer enemies */
@@ -771,7 +771,7 @@ static void P_GunShot(mobj_t *mo, boolean accurate)
   if (!accurate)
     {  // killough 5/5/98: remove dependence on order of evaluation:
       int t = P_Random();
-      angle += (t - P_Random())<<18;
+      angle += ((fixed_t)((unsigned int)(t - P_Random())<<18));
     }
 
   P_LineAttack(mo, angle, MISSILERANGE, _g->bulletslope, damage);
@@ -836,10 +836,10 @@ void A_FireShotgun2(player_t *player, pspdef_t *psp)
       angle_t angle = player->mo->angle;
       // killough 5/5/98: remove dependence on order of evaluation:
       int t = P_Random();
-      angle += (t - P_Random())<<19;
+      angle += ((fixed_t)((unsigned int)(t - P_Random())<<19));
       t = P_Random();
       P_LineAttack(player->mo, angle, MISSILERANGE, _g->bulletslope +
-                   ((t - P_Random())<<5), damage);
+                   (((fixed_t)((unsigned int)(t - P_Random())<<5))), damage);
     }
 }
 
