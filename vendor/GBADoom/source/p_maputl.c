@@ -342,7 +342,7 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(const line_t*))
     if (x<0 || y<0 || x>=_g->bmapwidth || y>=_g->bmapheight)
         return true;
 
-    const int offset = _g->blockmap[y*_g->bmapwidth+x];
+    const int offset = (unsigned short)SHORT(_g->blockmap[y*_g->bmapwidth+x]);
     const short* list = _g->blockmaplump+offset;     // original was reading         // phares
 
 
@@ -352,13 +352,13 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(const line_t*))
     // Most demos go out of sync, and maybe other problems happen, if we
     // don't consider linedef 0. For safety this should be qualified.
 
-    list++;     // skip 0 starting delimiter                      // phares
-
     const int vcount = _g->validcount;
 
-    for ( ; *list != -1 ; list++)                                   // phares
+    for ( ; SHORT(*list) != -1 ; list++)                                   // phares
     {
-        const int lineno = *list;
+        const int lineno = SHORT(*list);
+        if (lineno < 0 || lineno >= _g->numlines)
+            continue;
 
         linedata_t *lt = &_g->linedata[lineno];
 

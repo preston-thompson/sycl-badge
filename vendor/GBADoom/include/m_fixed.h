@@ -128,19 +128,7 @@ inline static fixed_t CONSTFUNC FixedMod(fixed_t a, fixed_t b)
 //Approx Reciprocal of v
 inline static CONSTFUNC fixed_t FixedReciprocal(fixed_t v)
 {
-    unsigned int val = v < 0 ? -v : v;
-
-    unsigned int shift = 0;
-
-    while(val > (1 << FRACBITS))
-    {
-        val = (val >> 1u);
-        shift++;
-    }
-
-    fixed_t result = (reciprocalTable[val] >> shift);
-
-    return v < 0 ? -result : result;
+    return FixedDiv(FRACUNIT, v);
 }
 
 
